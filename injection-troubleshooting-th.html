@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>คู่มือแก้ปัญหางานฉีดพลาสติก</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#15181C;
+    --panel:#1E232A;
+    --panel-2:#252B33;
+    --line:#333B45;
+    --ink:#E9ECEF;
+    --muted:#98A2AD;
+    --amber:#FFC233;
+    --steel:#7FB0E8;
+    --moss:#8FCB92;
+    --rust:#E2694A;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans Thai',system-ui,sans-serif;
+    font-weight:400;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:0 18px 72px}
+
+  /* ---- head ---- */
+  header{padding:34px 0 22px;border-bottom:1px solid var(--line)}
+  h1{
+    font-size:31px;line-height:1.25;font-weight:600;margin:0 0 6px;
+    letter-spacing:-.01em;
+  }
+  .sub{color:var(--muted);font-size:15px;font-weight:300;margin:0;max-width:52ch}
+
+  /* ---- search ---- */
+  .finder{position:sticky;top:0;z-index:20;background:var(--bg);padding:14px 0 10px;border-bottom:1px solid var(--line)}
+  .q{
+    width:100%;padding:15px 16px;font-size:17px;font-family:inherit;
+    background:var(--panel);color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;
+  }
+  .q::placeholder{color:#6D7883}
+  .q:focus{outline:2px solid var(--amber);outline-offset:1px;border-color:transparent}
+  .tabs{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .tab{
+    font-family:inherit;font-size:14px;padding:7px 13px;border-radius:999px;cursor:pointer;
+    background:transparent;color:var(--muted);border:1px solid var(--line);
+  }
+  .tab[aria-pressed="true"]{background:var(--amber);color:#15181C;border-color:var(--amber);font-weight:500}
+  .tab:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+  /* ---- rules card ---- */
+  .rules{
+    margin:22px 0 26px;padding:18px 20px;background:var(--panel);
+    border-left:3px solid var(--amber);border-radius:0 10px 10px 0;
+  }
+  .rules h2{font-size:16px;font-weight:600;margin:0 0 10px}
+  .rules ol{margin:0;padding-left:20px;font-size:15px;color:#CFD6DD}
+  .rules li{margin-bottom:5px}
+  .rules li:last-child{margin-bottom:0}
+
+  /* ---- defect list ---- */
+  .grouphead{
+    font-size:13px;color:var(--muted);font-weight:500;
+    margin:30px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line);
+  }
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .card summary{
+    list-style:none;cursor:pointer;padding:16px 18px;display:flex;align-items:baseline;gap:12px;
+  }
+  .card summary::-webkit-details-marker{display:none}
+  .card summary:focus-visible{outline:2px solid var(--amber);outline-offset:-2px}
+  .nameth{font-size:18px;font-weight:600}
+  .nameen{font-size:13px;color:var(--muted);font-weight:300}
+  .chev{margin-left:auto;color:var(--muted);font-size:13px;transition:transform .18s ease}
+  .card[open] .chev{transform:rotate(90deg)}
+  .card[open]{border-color:#46505C}
+  .body{padding:0 18px 18px}
+  .cause{
+    font-size:14.5px;color:#BCC5CE;background:var(--panel-2);
+    padding:11px 14px;border-radius:8px;margin:0 0 16px;
+  }
+
+  ol.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+  ol.steps li{
+    display:grid;grid-template-columns:30px 1fr;gap:12px;
+    padding:10px 0;border-top:1px solid #2C333B;
+  }
+  ol.steps li:first-child{border-top:none}
+  .num{
+    font-size:19px;font-weight:600;color:var(--amber);
+    font-variant-numeric:tabular-nums;line-height:1.35;
+  }
+  .act{font-size:15.5px}
+  .dir{font-weight:700;padding:0 2px}
+  .up{color:var(--moss)}
+  .down{color:var(--steel)}
+  .bal{color:var(--amber)}
+  .why{display:block;font-size:13.5px;color:var(--muted);font-weight:300;margin-top:1px}
+  .tierflag{
+    display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:4px;
+    margin-right:6px;vertical-align:1px;font-weight:500;
+  }
+  .t-set{background:rgba(255,194,51,.14);color:var(--amber)}
+  .t-mold{background:rgba(127,176,232,.14);color:var(--steel)}
+  .t-mat{background:rgba(143,203,146,.14);color:var(--moss)}
+
+  .empty{padding:40px 4px;color:var(--muted);font-size:16px}
+  footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);color:#6D7883;font-size:13px;font-weight:300}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>เจออาการแบบไหน แก้อะไรก่อน</h1>
+  <p class="sub">คู่มือไล่แก้ปัญหางานฉีดพลาสติก เรียงลำดับจากที่ปรับง่ายและเสี่ยงน้อยที่สุดก่อน แล้วค่อยไปแตะแม่พิมพ์กับวัตถุดิบ</p>
+</header>
+
+<div class="finder">
+  <input class="q" id="q" type="search" placeholder="พิมพ์อาการ เช่น ฉีดไม่เต็ม, ครีบ, รอยยุบ, sink" autocomplete="off">
+  <div class="tabs">
+    <button class="tab" data-f="all" aria-pressed="true">ทั้งหมด</button>
+    <button class="tab" data-f="machine" aria-pressed="false">ปัญหาจากเครื่อง/แม่พิมพ์</button>
+    <button class="tab" data-f="part" aria-pressed="false">ปัญหาบนชิ้นงาน</button>
+  </div>
+</div>
+
+<div class="rules">
+  <h2>ก่อนหมุนปุ่มแรก</h2>
+  <ol>
+    <li>เทียบค่าปัจจุบันกับรอบที่เคยได้งานดี (golden run) ก่อนเสมอ</li>
+    <li>ปรับทีละค่าเดียว ฉีดต่อ 5–10 ช็อตแล้วค่อยตัดสิน ถ้าปรับพร้อมกันหลายค่าจะไม่รู้ว่าตัวไหนแก้ได้</li>
+    <li>เช็กก่อนว่าวัตถุดิบอบครบเวลาหรือยัง และเป็นล็อตใหม่หรือเปล่า หลายอาการหายไปแค่เพราะเรื่องความชื้น</li>
+    <li>จดตำแหน่งที่เกิดตำหนิบนชิ้นงาน (ใกล้เกท / ปลายทางไหล / จุดหนา) ตำแหน่งบอกสาเหตุได้มากกว่าค่าที่หน้าจอ</li>
+    <li>ถ้าต้องดันค่าเข้าใกล้ลิมิตเครื่องถึงจะได้งาน แปลว่าหน้าต่างกระบวนการแคบเกินไป ให้ไปแก้ที่แม่พิมพ์หรือแบบชิ้นงานแทน</li>
+  </ol>
+</div>
+
+<div id="list"></div>
+
+<footer>
+  ลำดับอ้างอิงจากแนวทาง IDES Troubleshooting Chart ประกอบกับคู่มือกระบวนการฉีดของผู้ผลิตเรซิน · ทิศทางการปรับเป็นค่ากลาง เรซินแต่ละเกรดตอบสนองไม่เหมือนกัน ให้ยึดหน้าต่างกระบวนการใน data sheet ของวัสดุที่ใช้จริงเป็นหลัก
+</footer>
+
+</div>
+
+<script>
+const D = [
+{g:"machine", th:"ครีบเกิน", en:"Excessive Flash", key:"flash ครีบ เกินขอบ พาร์ทติ้ง",
+ cause:"พลาสติกดันแม่พิมพ์อ้าออกที่แนวพาร์ทติ้ง เพราะแรงฉีดสูงเกินแรงล็อก หรือหน้าแม่พิมพ์ปิดไม่สนิท",
+ s:[["set","ลด Injection Pressure","down","ตัวแปรที่ดันแม่พิมพ์อ้าโดยตรง"],
+    ["set","ลด Cylinder Temperature","down","เนื้อพลาสติกใสเกินไปจะไหลเข้าร่องเล็ก"],
+    ["set","เพิ่ม Clamp Pressure","up","อย่าดันจนสุด แรงมากเกินทำให้แผ่นแม่พิมพ์แอ่นและร่องระบายอากาศยุบ"],
+    ["set","ลด Injection Hold Time","down",""],
+    ["set","ลด Backpressure","down",""],
+    ["set","ลด Injection Speed","down",""],
+    ["set","ลด Mold Temperature","down",""],
+    ["mold","ทำความสะอาดหน้าแม่พิมพ์","","เศษพลาสติกค้างแค่จุดเดียวก็ทำให้ปิดไม่สนิท"],
+    ["mold","ตรวจการปิดสนิทของหน้าแม่พิมพ์","","ดูรอยสึกที่ shut-off และแนวพาร์ทติ้ง"],
+    ["mold","ตรวจร่องระบายอากาศว่าลึกเกินไปไหม","bal","ลึกเกิน 0.02 มม. สำหรับเรซินทั่วไปเริ่มเกิดครีบ"]]},
+
+{g:"machine", th:"ชิ้นงานใหญ่เกินขนาด", en:"Oversized Part", key:"oversize ใหญ่เกิน โตเกิน",
+ cause:"อัดเนื้อเข้าไปมากเกินไป หรือชิ้นงานยังไม่หดตัวครบก่อนปลด",
+ s:[["set","ลด Injection Speed","down",""],
+    ["set","ลด Injection Forward (Booster) Time","down",""],
+    ["set","ลด Injection Pressure","down",""],
+    ["set","ลด Holding Pressure","down",""],
+    ["set","ลด Cylinder Temperature","down",""],
+    ["set","เพิ่ม Mold Temperature","up","ให้ชิ้นงานหดตัวได้เต็มที่"],
+    ["set","ลด Overall Cycle Time","down",""],
+    ["set","เพิ่ม Clamp Pressure","up",""]]},
+
+{g:"machine", th:"ชิ้นงานติดแม่พิมพ์", en:"Part Sticking", key:"ติดแม่พิมพ์ ปลดไม่ออก stick",
+ cause:"อัดเนื้อแน่นเกินจนชิ้นงานเกาะผิวคาวิตี้ หรือผิว/มุมเอียงของแม่พิมพ์มีปัญหา",
+ s:[["set","ลด Injection Pressure","down",""],
+    ["set","ลด Holding Pressure","down",""],
+    ["set","ลด Injection Forward Time","down",""],
+    ["set","เพิ่ม Mold Cooling Time","up",""],
+    ["set","ลด Mold Temperature","down",""],
+    ["set","ลด Cylinder Temperature","down",""],
+    ["set","ลด Injection Hold Time","down",""],
+    ["set","ลด Injection Speed","down",""],
+    ["mold","ขัดผิวคาวิตี้ตามแนวถอด","","ขัดขวางแนวถอดจะยิ่งติด"],
+    ["mold","ตรวจมุมเอียง (draft) และรอยขีดข่วน","","ต่ำกว่า 1 องศาเริ่มเสี่ยง"],
+    ["mold","ทำความสะอาดร่องระบายอากาศ","",""],
+    ["mold","ตรวจสมดุลเข็มกระทุ้ง","","กระทุ้งไม่พร้อมกันทำให้ชิ้นงานบิดค้าง"]]},
+
+{g:"machine", th:"ฉีดไม่เต็ม", en:"Short Shot", key:"short shot ไม่เต็ม เนื้อขาด ไม่เดิน",
+ cause:"เนื้อพลาสติกไปไม่ถึงปลายคาวิตี้ ไม่ว่าจากแรงดันไม่พอ เนื้อแข็งตัวเร็ว หรืออากาศค้างจนดันเนื้อไม่เข้า",
+ s:[["set","เพิ่ม Injection Pressure","up","ถ้าเพิ่มแล้วเนื้อเดินต่อ = ปัญหาการไหล ถ้าไม่ขยับเลย = อากาศค้าง ให้ข้ามไปข้อร่องระบายอากาศ"],
+    ["set","เพิ่ม Injection Speed","up",""],
+    ["set","ตรวจ Shot Size และเบาะ (cushion)","up","เบาะหายแปลว่าเนื้อไม่พอหรือแหวนกันกลับรั่ว"],
+    ["set","เพิ่ม Melt Temperature","up",""],
+    ["set","เพิ่ม Nozzle Temperature","up","หัวฉีดเย็นทำให้เนื้อแข็งคาหัว"],
+    ["set","เพิ่ม Mold Temperature","up",""],
+    ["set","เพิ่ม Injection Hold Time","up",""],
+    ["set","เพิ่ม Backpressure","up",""],
+    ["mold","ทำความสะอาดและขยายร่องระบายอากาศ","up","ทดสอบด้วยการพ่นน้ำยาถอดแบบตรงจุดที่ไม่เต็ม ฉีด 5–10 ช็อต ถ้าเห็นรอยไหม้แปลว่าอากาศค้างแน่นอน"],
+    ["mold","ขยายทางวิ่ง/สปรู","up",""],
+    ["mold","ขยายเกท","up",""],
+    ["mold","ย้ายตำแหน่งเกทให้ใกล้จุดที่เติมไม่เต็ม","",""]]},
+
+{g:"machine", th:"สปรูติด", en:"Sprue Sticking", key:"sprue ติดสปรู ดึงไม่ออก",
+ cause:"เนื้อในสปรูยังไม่แข็งพอตอนเปิดแม่พิมพ์ หรือรูสปรูมีรอย/เทเปอร์ไม่พอ",
+ s:[["set","ลด Injection Pressure","down",""],
+    ["set","ลด Injection Hold Time","down",""],
+    ["set","ลด Injection Forward Time","down",""],
+    ["set","เพิ่ม Mold Cooling Time","up",""],
+    ["set","ลด Injection Speed","down",""],
+    ["set","ปรับ Nozzle Temperature","bal","ร้อนเกินสปรูไม่แข็ง เย็นเกินเกิดเนื้อเย็นค้าง"],
+    ["mold","ขัดรูสปรูตามแนวถอด","",""],
+    ["mold","ตรวจแนวศูนย์และรัศมีหัวฉีดกับบุชสปรู","","เยื้องแค่นิดเดียวก็ทำให้ค้าง"],
+    ["mold","ตรวจตัวดึงสปรู (sprue puller)","",""]]},
+
+{g:"machine", th:"ชิ้นงานเล็กเกินขนาด", en:"Undersized Part", key:"undersize เล็กเกิน หดมาก ขนาดไม่ได้",
+ cause:"อัดเนื้อชดเชยการหดตัวไม่พอ",
+ s:[["set","เพิ่ม Injection Speed","up",""],
+    ["set","เพิ่ม Injection Pressure","up",""],
+    ["set","เพิ่ม Injection Forward Time","up",""],
+    ["set","เพิ่ม Holding Pressure","up",""],
+    ["set","เพิ่ม Injection Hold Time","up","เพิ่มทีละ 1 วินาทีแล้วชั่งน้ำหนักชิ้นงาน พอน้ำหนักนิ่งแปลว่าเกทแข็งแล้ว เพิ่มต่อไปก็ไม่ช่วย"],
+    ["set","เพิ่ม Cylinder Temperature","up",""],
+    ["set","ลด Mold Temperature","down",""],
+    ["mold","ขยายเกท","up","เกทเล็กทำให้แข็งก่อนอัดเสร็จ"],
+    ["mold","ลด Mold Cooling Time","down",""]]},
+
+{g:"part", th:"จุดดำ เส้นน้ำตาล", en:"Black Specks, Brown Streaks", key:"จุดดำ ขี้ดำ เส้นน้ำตาล black specks",
+ cause:"เนื้อเก่าไหม้ค้างในกระบอกหรือหัวฉีด หรือมีสิ่งปนเปื้อนในวัตถุดิบ",
+ s:[["mat","ล้างกระบอกและสกรู (purge)","","ถ้ายังมีต่อ ถอดสกรูดูจุดอับที่หัวสกรูและแหวนกันกลับ"],
+    ["mat","ตรวจการปนเปื้อนของวัตถุดิบและถังผสม","",""],
+    ["set","ลด Melt Temperature","down",""],
+    ["set","ลด Overall Cycle Time","down","เนื้อค้างในกระบอกนานเกินไปจะไหม้"],
+    ["set","ลด Backpressure","down",""],
+    ["mold","ย้ายตำแหน่งเกท","","กรณีเนื้อไหม้ค้างในทางวิ่ง"]]},
+
+{g:"part", th:"ฟองพอง", en:"Blisters", key:"blister พอง ฟอง ตุ่ม",
+ cause:"ก๊าซหรือความชื้นถูกขังใต้ผิวชิ้นงานแล้วดันผิวขึ้นมาตอนคลายแรงดัน",
+ s:[["mat","อบวัตถุดิบให้ครบเวลาและอุณหภูมิตามสเปก","","เช็กชั่วโมงอบและอุณหภูมิถังก่อนอย่างอื่น"],
+    ["set","ลด Screw Speed","down",""],
+    ["set","เพิ่ม Backpressure","up","ไล่อากาศออกจากเนื้อ"],
+    ["set","ลด Melt Temperature","down",""],
+    ["set","เพิ่ม Mold Temperature","up",""],
+    ["mold","ขยายร่องระบายอากาศ","up",""],
+    ["mat","ตรวจการปนเปื้อน","",""]]},
+
+{g:"part", th:"ชิ้นงานเปราะ แตกง่าย", en:"Brittleness", key:"เปราะ แตก หัก brittle",
+ cause:"โมเลกุลถูกทำลายจากความร้อน แรงเฉือน หรือความชื้น รวมถึงรีไซเคิลมากเกินไป",
+ s:[["mat","อบวัตถุดิบให้ครบ","","ไนลอน PC PET ไวต่อความชื้นมาก ฉีดทั้งที่ชื้นทำให้สายโมเลกุลขาด"],
+    ["mat","ลดสัดส่วนเม็ดรีไซเคิล","down",""],
+    ["set","ลด Screw Speed","down",""],
+    ["set","ลด Backpressure","down",""],
+    ["set","เพิ่ม Melt Temperature","up","ถ้าเย็นเกินเนื้อจะเชื่อมกันไม่ดี แต่ห้ามเกินหน้าต่างของเรซิน"],
+    ["set","เพิ่ม Mold Temperature","up",""],
+    ["mat","ตรวจการปนเปื้อนของวัตถุดิบต่างชนิด","",""],
+    ["mold","ขยายร่องระบายอากาศ","up",""]]},
+
+{g:"part", th:"รอยไหม้", en:"Burn Marks", key:"burn ไหม้ ดำปลาย ดีเซล",
+ cause:"อากาศที่ถูกอัดค้างในคาวิตี้ร้อนจัดจนเผาเนื้อพลาสติก มักอยู่ที่ปลายทางไหลหรือก้นครีบ",
+ s:[["set","ลด Injection Speed","down","โดยเฉพาะช่วงท้ายของการเติม"],
+    ["set","ลด Melt Temperature","down",""],
+    ["set","ลด Mold Temperature","down",""],
+    ["set","ลด Injection Forward Time","down",""],
+    ["set","ลด Injection Pressure","down",""],
+    ["mold","ทำความสะอาดร่องระบายอากาศ","","รอยไหม้เกือบทั้งหมดจบที่ร่องระบายอากาศตัน"],
+    ["mold","ขยายหรือเพิ่มร่องระบายอากาศตรงจุดที่ไหม้","up","ใช้เข็มกระทุ้งช่วยระบายได้ในจุดที่เจาะร่องไม่ได้"],
+    ["mold","ขยายเกท","up",""]]},
+
+{g:"part", th:"แตกร้าว ราน", en:"Cracking, Crazing", key:"crack แตก ร้าว ราน craze",
+ cause:"ความเค้นค้างในชิ้นงานสูงเกินไป จากการอัดแน่นเกิน ปลดชิ้นงานไม่สมดุล หรือแม่พิมพ์เย็นเกิน",
+ s:[["set","ลด Injection Pressure","down",""],
+    ["set","ลด Holding Pressure","down",""],
+    ["set","ปรับ Injection Speed","bal",""],
+    ["set","เพิ่ม Mold Temperature","up","ลดความเค้นค้าง"],
+    ["set","เพิ่ม Mold Cooling Time","up","ให้ชิ้นงานแข็งพอก่อนโดนกระทุ้ง"],
+    ["mold","ตรวจสมดุลเข็มกระทุ้งและมุมเอียง","",""],
+    ["mat","อบวัตถุดิบ","",""],
+    ["mat","ลดเม็ดรีไซเคิล","down",""]]},
+
+{g:"part", th:"เนื้อแยกชั้น", en:"Delamination", key:"delamination แยกชั้น ลอกเป็นแผ่น",
+ cause:"เนื้อสองชนิดที่เข้ากันไม่ได้ปนกัน หรือความชื้น/สารแปลกปลอมทำให้เนื้อไม่เชื่อมเป็นเนื้อเดียว",
+ s:[["mat","ตรวจการปนเปื้อนของวัตถุดิบ","","สาเหตุอันดับหนึ่ง ถ้าลอกออกเป็นแผ่นบาง ๆ ให้สงสัยเรซินคนละชนิดปนกัน"],
+    ["mat","อบวัตถุดิบ","",""],
+    ["set","เพิ่ม Melt Temperature","up",""],
+    ["set","เพิ่ม Mold Temperature","up",""],
+    ["set","ปรับ Injection Speed","bal",""],
+    ["mat","ลดเม็ดรีไซเคิล","down",""],
+    ["mold","ขยายร่องระบายอากาศ","up",""]]},
+
+{g:"part", th:"สีเพี้ยน", en:"Discoloration", key:"สีเพี้ยน สีไม่ตรง เหลือง discolor",
+ cause:"เนื้อค้างในกระบอกจนเสื่อม สีเก่าตกค้าง หรืออัตราส่วนมาสเตอร์แบตช์ไม่คงที่",
+ s:[["mat","ล้างกระบอกและสกรู","",""],
+    ["mat","ตรวจการปนเปื้อนและอัตราส่วนมาสเตอร์แบตช์","",""],
+    ["set","ลด Nozzle Temperature","down",""],
+    ["set","ลด Cylinder Temperature","down",""],
+    ["set","ลด Backpressure","down",""],
+    ["set","ลด Overall Cycle Time","down","ลดเวลาที่เนื้ออยู่ในกระบอก"],
+    ["set","เพิ่ม Mold Temperature","up",""]]},
+
+{g:"part", th:"รอยไหลบนผิว", en:"Flow Marks", key:"flow mark รอยไหล ริ้วคลื่น",
+ cause:"เนื้อหน้าไหลเย็นตัวเป็นชั้นขณะเติมคาวิตี้ เห็นเป็นริ้วคลื่นวนออกจากเกท",
+ s:[["set","เพิ่ม Injection Speed","up",""],
+    ["set","เพิ่ม Injection Pressure","up",""],
+    ["set","เพิ่ม Melt Temperature","up",""],
+    ["set","เพิ่ม Mold Temperature","up",""],
+    ["set","เพิ่ม Nozzle Temperature","up",""],
+    ["mold","ขยายเกท","up",""],
+    ["mold","ขยายทางวิ่ง/สปรู","up",""]]},
+
+{g:"part", th:"เจ็ตติ้ง (รอยพุ่งเป็นงู)", en:"Jetting", key:"jetting พุ่ง งู รอยเส้นจากเกท",
+ cause:"เนื้อพุ่งผ่านเกทเป็นเส้นเข้าไปในคาวิตี้ที่ยังว่าง แล้วเย็นตัวก่อนเนื้อที่ตามมา",
+ s:[["set","ลด Injection Speed ช่วงต้น","down","ใช้แบบเริ่มช้าแล้วค่อยเร่ง (profile) ได้ผลดีที่สุด"],
+    ["set","เพิ่ม Melt Temperature","up",""],
+    ["set","เพิ่ม Mold Temperature","up",""],
+    ["mold","ขยายเกท","up",""],
+    ["mold","ย้ายตำแหน่งหรือเปลี่ยนชนิดเกท","","ให้เนื้อพุ่งชนผนังหรือหมุดทันทีที่ออกจากเกท"]]},
+
+{g:"part", th:"ผิวไม่เงา ด้าน", en:"Poor Surface Finish (Gloss)", key:"ผิวด้าน ไม่เงา gloss ผิวไม่สวย",
+ cause:"เนื้อไม่ได้แนบผิวคาวิตี้อย่างเต็มที่ตอนที่ยังไหลได้",
+ s:[["set","เพิ่ม Mold Temperature","up","ตัวแปรที่มีผลกับความเงามากที่สุด"],
+    ["set","เพิ่ม Injection Speed","up",""],
+    ["set","เพิ่ม Injection Pressure","up",""],
+    ["set","เพิ่ม Melt Temperature","up",""],
+    ["set","เพิ่ม Injection Hold Time","up",""],
+    ["set","เพิ่ม Mold Cooling Time","up",""],
+    ["mold","ขัดผิวคาวิตี้","",""],
+    ["mat","ตรวจความชื้นวัตถุดิบ","","ผิวด้านเป็นฝ้าทั่วทั้งชิ้นมักมาจากความชื้น"]]},
+
+{g:"part", th:"รอยประสาน", en:"Poor Weld Lines", key:"weld line รอยประสาน รอยเชื่อม knit",
+ cause:"เนื้อสองสายมาบรรจบกันตอนที่เย็นเกินไปจนเชื่อมกันไม่สนิท มักอยู่หลังรูหรือหมุด",
+ s:[["set","เพิ่ม Injection Speed","up",""],
+    ["set","เพิ่ม Mold Temperature","up",""],
+    ["set","เพิ่ม Melt Temperature","up",""],
+    ["set","เพิ่ม Injection Pressure","up",""],
+    ["set","เพิ่ม Nozzle Temperature","up",""],
+    ["mold","เพิ่มร่องระบายอากาศตรงแนวประสาน","up","อากาศค้างตรงจุดบรรจบทำให้เชื่อมไม่ติด"],
+    ["mold","ขยายเกทและทางวิ่ง","up",""],
+    ["mold","ย้ายตำแหน่งเกท","","ย้ายให้แนวประสานไปอยู่จุดที่ไม่รับแรงและไม่โชว์"]]},
+
+{g:"part", th:"รอยเสี้ยนเงิน สเปลย์", en:"Silver Streaks, Splay", key:"splay เสี้ยน silver streak รอยเงิน",
+ cause:"ความชื้นหรือก๊าซในเนื้อพลาสติกถูกดันมาที่ผิวเป็นริ้วเงินตามทิศทางการไหล",
+ s:[["mat","อบวัตถุดิบให้ครบเวลาและอุณหภูมิ","","สาเหตุหลักเกือบทุกครั้ง ตรวจก่อนแตะค่าเครื่อง"],
+    ["set","ลด Cylinder Temperature","down",""],
+    ["set","ลด Injection Speed","down",""],
+    ["set","ลด Nozzle Temperature","down",""],
+    ["set","เพิ่ม Mold Temperature","up",""],
+    ["set","ลด Overall Cycle Time","down",""],
+    ["set","เพิ่ม Backpressure","up",""],
+    ["mold","ขยายเกท","up",""],
+    ["mold","ขยายร่องระบายอากาศ","up",""]]},
+
+{g:"part", th:"รอยยุบ", en:"Sink Marks", key:"sink ยุบ บุ๋ม รอยยุบหลังครีบ",
+ cause:"เนื้อส่วนหนาหดตัวแล้วดึงผิวด้านนอกเข้าไป เพราะอัดชดเชยไม่พอหรือเกทแข็งก่อนอัดเสร็จ",
+ s:[["set","เพิ่ม Holding Pressure","up","แก้ได้ตรงจุดที่สุด"],
+    ["set","เพิ่ม Injection Hold Time","up","เพิ่มทีละ 1 วินาที ชั่งน้ำหนักทุกช็อต พอน้ำหนักนิ่งคือเกทแข็งแล้ว ถ้ายังยุบต้องไปแก้ที่เกทหรือระบบหล่อเย็น"],
+    ["set","เพิ่ม Injection Pressure","up",""],
+    ["set","เพิ่ม Injection Speed","up",""],
+    ["set","ตรวจ Shot Size และเบาะ","up","เบาะไม่พอทำให้อัดชดเชยไม่ได้"],
+    ["set","ลด Melt Temperature","down",""],
+    ["set","ลด Mold Temperature","down",""],
+    ["set","เพิ่ม Backpressure","up",""],
+    ["mold","ขยายเกทและทางวิ่ง","up","เกทใหญ่ขึ้นแข็งช้าลง อัดชดเชยได้นานขึ้น"],
+    ["mold","เพิ่มการหล่อเย็นเฉพาะจุดหนา","",""],
+    ["mold","แก้แบบชิ้นงาน ลดความหนาส่วนที่หนาเกิน","","ครีบไม่ควรหนาเกิน 60% ของผนังหลัก"]]},
+
+{g:"part", th:"โพรงอากาศในเนื้อ", en:"Voids", key:"void โพรง ฟองในเนื้อ รูกลวง",
+ cause:"เนื้อส่วนในหดตัวแล้วดึงตัวเองแยกออกเป็นโพรง อาการเดียวกับรอยยุบแต่ผิวนอกแข็งพอจะไม่ยุบตาม",
+ s:[["set","เพิ่ม Holding Pressure","up",""],
+    ["set","เพิ่ม Injection Hold Time","up",""],
+    ["set","เพิ่ม Injection Pressure","up",""],
+    ["set","ตรวจ Shot Size และเบาะ","up",""],
+    ["set","ลด Injection Speed","down",""],
+    ["set","ลด Melt Temperature","down",""],
+    ["set","เพิ่ม Mold Temperature","up",""],
+    ["mat","อบวัตถุดิบ","","แยกให้ออกว่าเป็นโพรงจากการหดตัวหรือฟองก๊าซจากความชื้น"],
+    ["mold","ขยายเกทและทางวิ่ง","up",""],
+    ["mold","แก้แบบชิ้นงาน ลดความหนา","",""]]},
+
+{g:"part", th:"บิดงอ เบี้ยว", en:"Warping", key:"warp บิด งอ เบี้ยว โก่ง",
+ cause:"ชิ้นงานหดตัวไม่เท่ากันระหว่างสองด้านหรือสองทิศทาง มักมาจากอุณหภูมิแม่พิมพ์สองฝั่งต่างกันหรืออัดไม่สม่ำเสมอ",
+ s:[["set","ปรับสมดุลอุณหภูมิแม่พิมพ์ฝั่งตัวผู้กับตัวเมีย","bal","ต่างกันเกิน 10 องศาเริ่มเห็นการบิด"],
+    ["set","เพิ่ม Mold Cooling Time","up",""],
+    ["set","ปรับ Injection Pressure","bal",""],
+    ["set","ปรับ Melt Temperature","bal",""],
+    ["set","ลด Holding Pressure","down","อัดแน่นเกินทำให้เค้นค้างไม่เท่ากัน"],
+    ["set","ลด Injection Speed","down",""],
+    ["mold","ตรวจสมดุลระบบหล่อเย็นและการอุดตันของท่อน้ำ","",""],
+    ["mold","ตรวจสมดุลเข็มกระทุ้ง","",""],
+    ["mold","ขยายเกท หรือย้าย/เพิ่มตำแหน่งเกท","up","ทางไหลไม่สมดุลคือสาเหตุเชิงโครงสร้างของการบิด"],
+    ["mold","ใช้จิ๊กจับชิ้นงานหลังปลด","","วิธีแก้ปลายทาง ใช้เมื่อแก้ที่ต้นเหตุไม่ได้แล้ว"]]}
+];
+
+const TIER = {set:["ตั้งค่าเครื่อง","t-set"], mold:["แม่พิมพ์","t-mold"], mat:["วัตถุดิบ/อื่นๆ","t-mat"]};
+const ARROW = {up:['↑','up'], down:['↓','down'], bal:['⇕','bal']};
+
+function render(filter, query){
+  const list = document.getElementById('list');
+  const q = query.trim().toLowerCase();
+  const items = D.filter(d =>
+    (filter === 'all' || d.g === filter) &&
+    (!q || (d.th + ' ' + d.en + ' ' + d.key).toLowerCase().includes(q))
+  );
+  if(!items.length){
+    list.innerHTML = '<p class="empty">ไม่พบอาการนี้ ลองพิมพ์คำสั้นลง เช่น “ยุบ” “ไหม้” “เต็ม” หรือกดดูทั้งหมด</p>';
+    return;
+  }
+  let html = '', lastG = null;
+  items.forEach(d => {
+    if(d.g !== lastG){
+      html += '<p class="grouphead">' + (d.g === 'machine' ? 'อาการที่ชี้ไปที่เครื่องและแม่พิมพ์' : 'ตำหนิบนตัวชิ้นงาน') + '</p>';
+      lastG = d.g;
+    }
+    html += '<details class="card"><summary><span class="nameth">' + d.th +
+      '</span><span class="nameen">' + d.en + '</span><span class="chev">›</span></summary>' +
+      '<div class="body"><p class="cause">' + d.cause + '</p><ol class="steps">';
+    d.s.forEach((st, i) => {
+      const [tier, act, dir, why] = st;
+      const t = TIER[tier];
+      const a = ARROW[dir];
+      html += '<li><span class="num">' + (i+1) + '</span><span class="act">' +
+        '<span class="tierflag ' + t[1] + '">' + t[0] + '</span>' + act +
+        (a ? ' <span class="dir ' + a[1] + '">' + a[0] + '</span>' : '') +
+        (why ? '<span class="why">' + why + '</span>' : '') +
+        '</span></li>';
+    });
+    html += '</ol></div></details>';
+  });
+  list.innerHTML = html;
+}
+
+let curFilter = 'all';
+const qEl = document.getElementById('q');
+qEl.addEventListener('input', () => render(curFilter, qEl.value));
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-pressed', b === btn));
+    curFilter = btn.dataset.f;
+    render(curFilter, qEl.value);
+  });
+});
+render('all','');
+</script>
+</body>
+</html>
