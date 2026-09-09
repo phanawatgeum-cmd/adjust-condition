@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PE คู่มือแก้ปัญหางานฉีดพลาสติก</title>
+<title>คู่มือแก้ปัญหางานฉีดพลาสติก</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<meta name="apple-mobile-web-app-title" content="แก้ปัญหางานฉีด">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#15181C">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -115,6 +122,56 @@
 
   .empty{padding:40px 4px;color:var(--muted);font-size:16px}
   footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);color:#6D7883;font-size:13px;font-weight:300}
+
+  /* ---- top nav ---- */
+  nav.views{display:flex;gap:0;margin:18px 0 0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  nav.views button{
+    flex:1;font-family:inherit;font-size:15px;padding:12px 8px;cursor:pointer;
+    background:transparent;color:var(--muted);border:none;
+  }
+  nav.views button[aria-pressed="true"]{background:var(--panel-2);color:var(--ink);font-weight:600}
+  nav.views button:focus-visible{outline:2px solid var(--amber);outline-offset:-2px}
+  .view[hidden]{display:none}
+
+  /* ---- material cards ---- */
+  .mrow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .fam{
+    font-size:12px;font-weight:600;padding:2px 9px;border-radius:5px;
+    background:var(--panel-2);color:#BCC5CE;letter-spacing:.02em;
+  }
+  .conf{width:9px;height:9px;border-radius:50%;display:inline-block;margin-left:auto;flex:none}
+  .c-high{background:var(--moss)}
+  .c-mid{background:var(--muted)}
+  .c-none{background:var(--rust)}
+  .spec{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px;margin:0 0 14px}
+  .spec dt{color:var(--muted);font-weight:300}
+  .spec dd{margin:0}
+  .val{font-variant-numeric:tabular-nums}
+
+  .check{background:var(--panel-2);border-radius:10px;padding:14px;margin-bottom:14px}
+  .check h3{font-size:14px;margin:0 0 10px;font-weight:500;color:#CFD6DD}
+  .inputs{display:flex;gap:10px}
+  .inputs label{flex:1;font-size:13px;color:var(--muted)}
+  .inputs input{
+    width:100%;margin-top:4px;padding:10px 12px;font-size:16px;font-family:inherit;
+    background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;
+    font-variant-numeric:tabular-nums;
+  }
+  .inputs input:focus{outline:2px solid var(--amber);outline-offset:1px;border-color:transparent}
+  .verdict{margin-top:12px;font-size:14.5px;display:none}
+  .verdict.on{display:block}
+  .vline{padding:9px 12px;border-radius:7px;margin-bottom:7px;border-left:3px solid}
+  .v-ok{background:rgba(143,203,146,.10);border-color:var(--moss)}
+  .v-warn{background:rgba(255,194,51,.10);border-color:var(--amber)}
+  .v-bad{background:rgba(226,105,74,.12);border-color:var(--rust)}
+  .vline b{font-weight:600}
+  .vline span{display:block;color:var(--muted);font-size:13.5px;font-weight:300;margin-top:2px}
+
+  .famnote{font-size:14px;color:#BCC5CE;background:var(--panel-2);padding:12px 14px;border-radius:8px}
+  .famnote b{display:block;font-size:13px;color:var(--amber);font-weight:600;margin-bottom:5px}
+  .famnote ul{margin:0;padding-left:18px}
+  .famnote li{margin-bottom:3px}
+  .note{font-size:13.5px;color:var(--muted);font-weight:300;margin:12px 0 0;padding-top:10px;border-top:1px solid #2C333B}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -126,6 +183,12 @@
   <p class="sub">คู่มือไล่แก้ปัญหางานฉีดพลาสติก เรียงลำดับจากที่ปรับง่ายและเสี่ยงน้อยที่สุดก่อน แล้วค่อยไปแตะแม่พิมพ์กับวัตถุดิบ</p>
 </header>
 
+<nav class="views">
+  <button data-v="defects" aria-pressed="true">อาการและวิธีแก้</button>
+  <button data-v="mats" aria-pressed="false">ค่าตั้งเครื่องตามวัสดุ</button>
+</nav>
+
+<section class="view" id="v-defects">
 <div class="finder">
   <input class="q" id="q" type="search" placeholder="พิมพ์อาการ เช่น ฉีดไม่เต็ม, ครีบ, รอยยุบ, sink" autocomplete="off">
   <div class="tabs">
@@ -147,6 +210,25 @@
 </div>
 
 <div id="list"></div>
+</section>
+
+<section class="view" id="v-mats" hidden>
+<div class="finder">
+  <input class="q" id="mq" type="search" placeholder="พิมพ์เกรดหรือชนิดวัสดุ เช่น 70G33L, EGN, POM" autocomplete="off">
+  <div class="tabs" id="famtabs"></div>
+</div>
+
+<div class="rules">
+  <h2>ใช้หน้านี้ยังไง</h2>
+  <ol>
+    <li>หาเกรดที่กำลังฉีด แล้วกรอกอุณหภูมิกระบอกและแม่พิมพ์ที่ตั้งอยู่จริงลงไป ระบบจะบอกว่าอยู่ในช่วงหรือหลุดไปทางไหน</li>
+    <li>ถ้าค่าที่ใช้อยู่หลุดช่วง ให้แก้ตรงนี้ก่อนไปไล่หน้าอาการ เพราะตำหนิหลายอย่างหายเองเมื่ออุณหภูมิกลับเข้าที่</li>
+    <li>จุดสีท้ายชื่อเกรดบอกความน่าเชื่อถือของตัวเลข เขียวคือมาจาก TDS ของผู้ผลิตโดยตรง เทาคือเทียบเคียงจากเกรดใกล้เคียง แดงคือยังไม่มีที่มา ห้ามใช้ตั้งเครื่องจนกว่าจะได้ TDS จากซัพพลายเออร์</li>
+  </ol>
+</div>
+
+<div id="mlist"></div>
+</section>
 
 <footer>
   ลำดับอ้างอิงจากแนวทาง IDES Troubleshooting Chart ประกอบกับคู่มือกระบวนการฉีดของผู้ผลิตเรซิน · ทิศทางการปรับเป็นค่ากลาง เรซินแต่ละเกรดตอบสนองไม่เหมือนกัน ให้ยึดหน้าต่างกระบวนการใน data sheet ของวัสดุที่ใช้จริงเป็นหลัก
@@ -448,6 +530,221 @@ document.querySelectorAll('.tab').forEach(btn => {
   });
 });
 render('all','');
+
+/* ================= หน้าค่าตั้งเครื่องตามวัสดุ ================= */
+const FAM = {
+ PA:{shrink:"ไม่เติมใย 1.0–2.0% · เติมใยแก้ว 0.3–0.8% (ตามแนวไหลกับขวางแนวไหลต่างกันมาก ชิ้นงานบิดง่าย)",
+     ceiling:"อย่าให้เนื้อร้อนเกิน 320°C และอย่าให้ค้างในกระบอกเกิน 5–6 นาที",
+     regrind:"ไม่เกิน 25% และต้องอบใหม่ทุกครั้งก่อนใช้",
+     tips:["ดูดความชื้นเร็วมาก เปิดถุงแล้วทิ้งไว้ในอากาศไม่กี่ชั่วโมงก็ชื้นเกินสเปกแล้ว",
+           "ชื้นเกิน 0.2% จะเจอสเปลย์และชิ้นงานเปราะทันที ถ้าเจอสองอาการนี้ให้กลับไปดูตู้อบก่อนเสมอ",
+           "แม่พิมพ์ต่ำกว่า 60°C ผิวจะด้านและขนาดจะเปลี่ยนต่อเนื่องหลังปลด เพราะผลึกยังก่อตัวไม่ครบ"]},
+ PC:{shrink:"0.5–0.7% · เติมใยแก้ว 0.2–0.5% (หดตัวน้อยและคาดเดาง่ายกว่ากลุ่มผลึก)",
+     ceiling:"อย่าเกิน 320°C",
+     regrind:"ไม่เกิน 20–25% ถ้าชิ้นงานต้องใส",
+     tips:["ต้องอบ 120°C อย่างน้อย 4 ชั่วโมงเสมอ ไม่มีข้อยกเว้น ฉีดทั้งที่ชื้นทำให้สายโมเลกุลขาดถาวร",
+           "หนืดสูง ต้องใช้แรงดันฉีดสูงเป็นปกติ อย่าแก้ปัญหาฉีดไม่เต็มด้วยการดันอุณหภูมิขึ้นอย่างเดียว",
+           "ไวต่อความเค้นค้างมาก แม่พิมพ์เย็นเกินจะได้ชิ้นงานที่ดูปกติแต่แตกร้าวทีหลัง"]},
+ POM:{shrink:"1.8–2.2% · เติมใยแก้ว 0.4–1.2% (หดตัวสูงที่สุดในกลุ่มนี้ เผื่อขนาดให้ดี)",
+     ceiling:"เพดานจริงคือ 220°C ห้ามเกิน 230°C เด็ดขาด และห้ามค้างในกระบอกนาน",
+     regrind:"ไม่เกิน 20%",
+     tips:["ได้กลิ่นฉุนแสบจมูกคือฟอร์มาลดีไฮด์จากเนื้อที่เริ่มสลาย ให้ลดอุณหภูมิและล้างกระบอกทันที ไม่ใช่แค่เรื่องกลิ่นแต่เป็นอันตรายต่อคนหน้าเครื่อง",
+           "หน้าต่างอุณหภูมิแคบมาก ห่างกันแค่ 10–15°C ก็เปลี่ยนจากงานดีเป็นงานเสีย ถ้าอยากให้ไหลดีขึ้นให้ไปเพิ่มความเร็วฉีดหรืออุณหภูมิแม่พิมพ์แทน",
+           "ก่อนหยุดเครื่องหรือพักเครื่องนาน ให้ล้างกระบอกด้วย PP หรือ PE ก่อนทุกครั้ง"]},
+ PBT:{shrink:"1.5–2.0% · เติมใยแก้ว 0.3–0.6%",
+     ceiling:"อย่าเกิน 270°C",
+     regrind:"ไม่เกิน 20%",
+     tips:["ไวต่อการสลายจากน้ำ (hydrolysis) อบไม่ครบแล้วฉีด ชิ้นงานจะเปราะแม้หน้าตาปกติ",
+           "แข็งตัวเร็วมาก ถ้าฉีดไม่เต็มให้เพิ่มความเร็วฉีดก่อนเพิ่มอุณหภูมิ",
+           "ตั้งอุณหภูมิกระบอกไล่ระดับจากหลังไปหน้า อย่าตั้งเท่ากันทุกโซน"]},
+ PPS:{shrink:"0.2–0.5% (เติมใยแก้ว)",
+     ceiling:"อย่าเกิน 340°C",
+     regrind:"ไม่เกิน 15–20%",
+     tips:["แม่พิมพ์ต้องร้อนจริง 130°C ขึ้นไป ถ้าเย็นกว่านี้ผลึกก่อตัวไม่ครบ ชิ้นงานจะเปราะและขนาดเปลี่ยนเมื่อโดนความร้อนตอนใช้งาน",
+           "กัดกร่อนเหล็ก ต้องใช้สกรูและกระบอกทนการกัดกร่อน ตรวจสภาพหัวสกรูเป็นระยะ",
+           "หนืดต่ำมากตอนหลอม เกิดครีบง่ายกว่าวัสดุอื่น ร่องระบายอากาศต้องตื้นกว่าปกติ"]},
+ LCP:{shrink:"เกือบเป็นศูนย์ตามแนวไหล แต่ขวางแนวไหลหดมากกว่าหลายเท่า ทิศทางเกทมีผลกับขนาดโดยตรง",
+     ceiling:"ตามที่ TDS ระบุเท่านั้น หน้าต่างแคบ",
+     regrind:"ไม่เกิน 10–15%",
+     tips:["หนืดต่ำมาก เกิดครีบง่ายที่สุดในบรรดาวัสดุที่ใช้อยู่ ต้องคุมแรงล็อกและร่องระบายอากาศให้ดี",
+           "รอยประสานอ่อนแรงกว่าวัสดุอื่นอย่างเห็นได้ชัด ควรออกแบบให้แนวประสานไม่อยู่จุดรับแรง",
+           "ต้องอบที่อุณหภูมิสูงและนาน อย่าลดเวลาอบเพื่อเร่งงาน"]},
+ PP:{shrink:"1.2–2.0% (หดตัวสูงและหดต่อเนื่องหลังปลดหลายชั่วโมง)",
+     ceiling:"อย่าเกิน 280°C",
+     regrind:"ใช้ได้ถึง 30–50% ในงานทั่วไป",
+     tips:["ไม่ต้องอบในงานปกติ",
+           "เกิดรอยยุบง่ายเพราะหดตัวสูง ให้แก้ที่แรงดันคงและเวลาคงก่อน",
+           "อย่าวัดขนาดชิ้นงานทันทีหลังปลด ควรรออย่างน้อย 24 ชั่วโมง"]},
+ ABS:{shrink:"0.4–0.7% (หดตัวน้อยและสม่ำเสมอ ทำงานง่าย)",
+     ceiling:"อย่าเกิน 260°C",
+     regrind:"ไม่เกิน 25–30%",
+     tips:["อบ 80–90°C 2–4 ชั่วโมง ถ้าไม่อบจะเจอรอยเสี้ยนเงินบนผิวทันที",
+           "ไวต่ออุณหภูมิแม่พิมพ์เรื่องความเงา อยากได้ผิวเงาให้เพิ่มอุณหภูมิแม่พิมพ์ก่อนอย่างอื่น"]},
+ "EL-LENE":{shrink:"1.5–3.0% (กลุ่ม PE)",
+     ceiling:"—",
+     regrind:"—",
+     tips:["เกรดนี้เป็น LDPE สำหรับเป่าฟิล์ม ไม่ใช่เกรดฉีดขึ้นรูป ค่าอุณหภูมิแม่พิมพ์จึงไม่มีความหมาย",
+           "ถ้าจะใช้ฉีดจริง ต้องขอเกรดฉีด (injection grade) จากผู้ขายแทน"]}
+};
+
+const M = [
+ {f:"PA", g:"E47H", b:[180,220], m:[15,40], dry:"—", conf:"mid",
+  note:"คาดว่าคือ Evonik VESTAMID E47 (PA12 elastomer) เทียบจาก E47-S1/S3 เพราะหา E47-H ตรงตัวไม่เจอ ต้องเช็กกับซัพพลายเออร์"},
+ {f:"PA", g:"70G33L", b:[285,305], m:[70,120], dry:"80°C 2–4 ชม. (ตู้อบลดความชื้น) ให้เหลือความชื้นต่ำกว่า 0.20%", conf:"high",
+  note:"จาก TDS ของ Zytel โดยตรง จุดที่ได้งานดีที่สุดมักอยู่ราว 295°C และแม่พิมพ์ 100°C"},
+ {f:"PA", g:"CM3001G-30", b:[270,295], m:[80,100], dry:"80°C", conf:"mid",
+  note:"Toray Amilan PA66-GF30 เทียบเคียงจากเกรด GF33 ของ DuPont"},
+ {f:"PA", g:"PA66 (ทั่วไป)", b:[260,290], m:[60,80], dry:"80–90°C", conf:"mid",
+  note:"อ้างอิงจาก Toray CM3006 แบบไม่เติมใย ใช้เป็นค่ากลางเวลาไม่มี TDS"},
+ {f:"PC", g:"EGN-2020DR", b:[280,300], m:[80,120], dry:"120°C 4–8 ชม.", conf:"high", note:"จาก TDS ของ Mitsubishi Iupilon โดยตรง"},
+ {f:"PC", g:"GSN-2010DR", b:[280,300], m:[80,120], dry:"120°C 4–8 ชม.", conf:"mid", note:"ยืนยันว่าเป็นเกรด Iupilon จริง แต่ตัวเลขเทียบจากตระกูล PC-GF เดียวกัน"},
+ {f:"PC", g:"GSN-2020DR", b:[280,300], m:[80,120], dry:"120°C 4–8 ชม.", conf:"mid", note:"เทียบจากตระกูลเดียวกัน"},
+ {f:"PC", g:"LS-2000", b:null, m:null, dry:"ไม่ทราบ", conf:"none", note:"หาผู้ผลิตและที่มาไม่ได้ ต้องขอ TDS จากซัพพลายเออร์ก่อนตั้งเครื่อง"},
+ {f:"PC", g:"PC-GF20 (ทั่วไป)", b:[280,300], m:[80,120], dry:"120°C 4–8 ชม.", conf:"mid", note:"ค่ากลางของ PC เติมใยแก้ว 20% อิงจากมาตรฐาน Mitsubishi"},
+ {f:"PC", g:"F4040", b:null, m:null, dry:"ไม่ทราบ", conf:"none", note:"หาที่มาไม่ได้"},
+ {f:"PC", g:"EGN-2020DP", b:[280,300], m:[80,120], dry:"120°C 4–8 ชม.", conf:"mid", note:"เทียบจากตระกูล EGN เดียวกัน"},
+ {f:"PC", g:"GSH-2030SR", b:[280,300], m:[80,120], dry:"120°C 4–8 ชม.", conf:"mid", note:"เทียบจากตระกูล GSH/EGN เติมใยแก้ว 30%"},
+ {f:"PC", g:"EGN2030R2", b:[280,300], m:[80,120], dry:"120°C 4–8 ชม.", conf:"high", note:"จาก TDS ของ Mitsubishi Iupilon โดยตรง"},
+ {f:"PC", g:"PC-C-10", b:null, m:null, dry:"ไม่ทราบ", conf:"none", note:"หาที่มาไม่ได้"},
+ {f:"PC", g:"S3000R", b:[270,300], m:[70,100], dry:"120°C 4–8 ชม.", conf:"high", note:"จาก TDS ของ Mitsubishi Iupilon โดยตรง เป็นเกรดไม่เติมใย ใช้อุณหภูมิต่ำกว่าเกรด GF ได้"},
+ {f:"POM", g:"NW-02", b:[190,210], m:[60,100], dry:"80–100°C 2–3 ชม. เฉพาะเมื่อจำเป็น", conf:"mid", note:"Polyplastics Duracon ยืนยันเป็นเกรดจริง ตัวเลขอิงมาตรฐาน POM copolymer"},
+ {f:"POM", g:"GB-25", b:[200,220], m:[80,120], dry:"80–100°C 2–3 ชม.", conf:"mid", note:"เกรดเติมใยแก้ว 25% เทียบเคียงจากตระกูล Duracon"},
+ {f:"POM", g:"GH-25", b:[200,220], m:[80,120], dry:"80–100°C 2–3 ชม.", conf:"mid", note:"เทียบเคียงจากตระกูล Duracon"},
+ {f:"POM", g:"GH-25D", b:[200,220], m:[80,120], dry:"80–100°C 2–3 ชม.", conf:"mid", note:"เทียบเคียงจากตระกูล Duracon"},
+ {f:"POM", g:"M450-44", b:[190,210], m:[60,100], dry:"80–100°C 2–3 ชม.", conf:"mid", note:"Duracon M-series ค่ามาตรฐาน"},
+ {f:"POM", g:"M90-44, M90S", b:[190,210], m:[60,100], dry:"80–100°C 2–3 ชม.", conf:"mid", note:"พบจุดข้อมูลจริงจาก TDS ที่กระบอก 190°C"},
+ {f:"POM", g:"KT-20", b:null, m:null, dry:"ไม่ทราบ", conf:"none", note:"หาที่มาไม่ได้"},
+ {f:"POM", g:"OA-30", b:null, m:null, dry:"ไม่ทราบ", conf:"none", note:"หาที่มาไม่ได้"},
+ {f:"LCP", g:"XYDAR E130i", b:[315,345], m:[80,120], dry:"150–170°C 4–6 ชม.", conf:"mid",
+  note:"รหัส E130i ตรงกับตระกูล Vectra ของ Celanese ไม่ใช่ Xydar ต้องเช็กยี่ห้อกับผู้ขายก่อน เพราะสองยี่ห้อใช้อุณหภูมิไม่เท่ากัน"},
+ {f:"LCP", g:"VECTRA HM", b:null, m:null, dry:"ไม่ทราบ", conf:"none", note:"ไม่พบใน line-up ปัจจุบันของ Celanese อาจเป็นรุ่นเก่าหรือเลิกผลิต"},
+ {f:"LCP", g:"FC-110B", b:null, m:null, dry:"ไม่ทราบ", conf:"none", note:"หาที่มาไม่ได้"},
+ {f:"PBT", g:"DURANEX 3300", b:[230,260], m:[60,90], dry:"120°C 3–5 ชม. ให้เหลือความชื้นต่ำกว่า 0.02%", conf:"high",
+  note:"Polyplastics Duranex เติมใยแก้ว 30% ตั้งอุณหภูมิกระบอกไล่ระดับจากหลังไปหน้า"},
+ {f:"PBT", g:"701SA", b:null, m:null, dry:"ไม่ทราบ", conf:"none", note:"หาที่มาไม่ได้"},
+ {f:"PPS", g:"A515", b:[310,330], m:[120,150], dry:"130°C 3–4 ชม.", conf:"high",
+  note:"Toray Torelina เติมใยแก้ว 30% ผสม PTFE จุดที่แนะนำของแม่พิมพ์คือราว 130°C"},
+ {f:"EL-LENE", g:"LD1905FA", b:null, m:null, dry:"—", conf:"none",
+  note:"ยืนยันว่าเป็น SCG EL-Lene จริง แต่เป็นเกรด LDPE สำหรับเป่าฟิล์ม ไม่ใช่เกรดฉีด จึงไม่มีค่าอุณหภูมิแม่พิมพ์ให้เทียบ"},
+ {f:"PP", g:"PP9074MED", b:[200,250], m:[20,60], dry:"ไม่ต้องอบ", conf:"none", note:"หาที่มาไม่ได้ ใช้ค่ากลางของ PP ไปก่อน ควรขอ TDS เพราะเป็นเกรดทางการแพทย์"},
+ {f:"ABS", g:"700-314", b:[210,250], m:[40,80], dry:"80–90°C 2–4 ชม.", conf:"none", note:"หาที่มาไม่ได้ ใช้ค่ากลางของ ABS ไปก่อน"}
+];
+
+const CEIL = {POM:230, PC:320, PA:320, PBT:270, PPS:340, PP:280, ABS:260};
+
+const OUT = {
+ bHigh:["สเปลย์และรอยเสี้ยนเงิน","รอยไหม้","จุดดำเส้นน้ำตาล","ครีบเกิน","ชิ้นงานเปราะ"],
+ bLow:["ฉีดไม่เต็ม","รอยประสานชัด","ผิวด้าน","รอยไหลบนผิว"],
+ mHigh:["ครีบเกิน","ชิ้นงานติดแม่พิมพ์","ไซเคิลยาวขึ้น","รอยยุบ"],
+ mLow:["รอยประสานชัด","ผิวด้าน","บิดงอ","ความเค้นค้างจนแตกร้าวภายหลัง"]
+};
+
+function judge(range, val, kind, fam){
+  if(range === null) return {c:"v-warn", t:"เกรดนี้ยังไม่มีช่วงอ้างอิง", s:"ขอ TDS จากซัพพลายเออร์ก่อน อย่าตั้งเครื่องจากค่าคาดเดา"};
+  const [lo, hi] = range;
+  const label = kind === "b" ? "อุณหภูมิกระบอก" : "อุณหภูมิแม่พิมพ์";
+  if(kind === "b" && CEIL[fam] && val > CEIL[fam]){
+    return {c:"v-bad", t:label + " " + val + "°C เกินเพดานความปลอดภัยของ " + fam + " (" + CEIL[fam] + "°C)",
+            s:"เนื้อพลาสติกกำลังสลาย ลดลงมาก่อนแล้วล้างกระบอก อย่าฝืนฉีดต่อ"};
+  }
+  if(val < lo){
+    return {c:"v-bad", t:label + " ต่ำกว่าช่วงแนะนำ " + (lo - val) + "°C",
+            s:"อาการที่มักตามมา: " + (kind === "b" ? OUT.bLow : OUT.mLow).join(" · ")};
+  }
+  if(val > hi){
+    return {c:"v-bad", t:label + " สูงกว่าช่วงแนะนำ " + (val - hi) + "°C",
+            s:"อาการที่มักตามมา: " + (kind === "b" ? OUT.bHigh : OUT.mHigh).join(" · ")};
+  }
+  const pos = (val - lo) / (hi - lo || 1);
+  let where = "อยู่กลางช่วงพอดี";
+  if(pos <= 0.15) where = "อยู่ชิดขอบล่างของช่วง เหลือที่ให้ปรับลงอีกไม่มาก";
+  else if(pos >= 0.85) where = "อยู่ชิดขอบบนของช่วง เหลือที่ให้ปรับขึ้นอีกไม่มาก";
+  return {c:"v-ok", t:label + " " + val + "°C อยู่ในช่วง " + lo + "–" + hi + "°C", s:where};
+}
+
+function esc(x){ return String(x).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+function renderMats(fam, query){
+  const el = document.getElementById('mlist');
+  const q = query.trim().toLowerCase();
+  const items = M.filter(x =>
+    (fam === 'all' || x.f === fam) &&
+    (!q || (x.f + ' ' + x.g).toLowerCase().includes(q)));
+  if(!items.length){ el.innerHTML = '<p class="empty">ไม่พบเกรดนี้ ลองพิมพ์แค่บางส่วน เช่น “EGN” หรือ “M90”</p>'; return; }
+  let html = '', lastF = null;
+  items.forEach((x, i) => {
+    if(x.f !== lastF){ html += '<p class="grouphead">' + x.f + '</p>'; lastF = x.f; }
+    const cls = x.conf === 'high' ? 'c-high' : (x.conf === 'mid' ? 'c-mid' : 'c-none');
+    const idx = M.indexOf(x);
+    html += '<details class="card"><summary><span class="nameth">' + esc(x.g) + '</span>' +
+      '<span class="fam">' + x.f + '</span><span class="conf ' + cls + '"></span><span class="chev">›</span></summary>' +
+      '<div class="body"><dl class="spec">' +
+      '<dt>กระบอก</dt><dd class="val">' + (x.b ? x.b[0] + '–' + x.b[1] + ' °C' : 'ยังไม่มีข้อมูล') + '</dd>' +
+      '<dt>แม่พิมพ์</dt><dd class="val">' + (x.m ? x.m[0] + '–' + x.m[1] + ' °C' : 'ยังไม่มีข้อมูล') + '</dd>' +
+      '<dt>การอบ</dt><dd>' + esc(x.dry) + '</dd>' +
+      '<dt>การหดตัว</dt><dd>' + (FAM[x.f] ? FAM[x.f].shrink : '—') + '</dd>' +
+      '<dt>เม็ดรีไซเคิล</dt><dd>' + (FAM[x.f] ? FAM[x.f].regrind : '—') + '</dd>' +
+      '</dl>' +
+      '<div class="check"><h3>กรอกค่าที่ตั้งอยู่จริงเพื่อเทียบ</h3><div class="inputs">' +
+      '<label>กระบอก °C<input type="number" inputmode="numeric" data-i="' + idx + '" data-k="b"></label>' +
+      '<label>แม่พิมพ์ °C<input type="number" inputmode="numeric" data-i="' + idx + '" data-k="m"></label>' +
+      '</div><div class="verdict" id="vd' + idx + '"></div></div>';
+    if(FAM[x.f]){
+      html += '<div class="famnote"><b>ข้อควรรู้ของ ' + x.f + '</b><ul><li>เพดานอุณหภูมิ: ' + FAM[x.f].ceiling + '</li>' +
+        FAM[x.f].tips.map(t => '<li>' + t + '</li>').join('') + '</ul></div>';
+    }
+    html += '<p class="note">' + esc(x.note) + '</p></div></details>';
+  });
+  el.innerHTML = html;
+  el.querySelectorAll('input[data-i]').forEach(inp => inp.addEventListener('input', onCheck));
+}
+
+function onCheck(e){
+  const idx = +e.target.dataset.i;
+  const box = document.getElementById('vd' + idx);
+  const mat = M[idx];
+  const card = e.target.closest('.check');
+  let out = '';
+  card.querySelectorAll('input[data-i]').forEach(inp => {
+    const v = parseFloat(inp.value);
+    if(isNaN(v)) return;
+    const k = inp.dataset.k;
+    const r = judge(k === 'b' ? mat.b : mat.m, v, k, mat.f);
+    out += '<div class="vline ' + r.c + '"><b>' + r.t + '</b><span>' + r.s + '</span></div>';
+  });
+  box.innerHTML = out;
+  box.classList.toggle('on', out !== '');
+}
+
+/* family filter chips */
+const fams = [...new Set(M.map(x => x.f))];
+document.getElementById('famtabs').innerHTML =
+  '<button class="tab" data-mf="all" aria-pressed="true">ทั้งหมด</button>' +
+  fams.map(f => '<button class="tab" data-mf="' + f + '" aria-pressed="false">' + f + '</button>').join('');
+let curFam = 'all';
+const mqEl = document.getElementById('mq');
+mqEl.addEventListener('input', () => renderMats(curFam, mqEl.value));
+document.querySelectorAll('[data-mf]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-mf]').forEach(b => b.setAttribute('aria-pressed', b === btn));
+    curFam = btn.dataset.mf;
+    renderMats(curFam, mqEl.value);
+  });
+});
+
+/* view switching */
+document.querySelectorAll('nav.views button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav.views button').forEach(b => b.setAttribute('aria-pressed', b === btn));
+    const v = btn.dataset.v;
+    document.getElementById('v-defects').hidden = (v !== 'defects');
+    document.getElementById('v-mats').hidden = (v !== 'mats');
+    window.scrollTo(0, 0);
+  });
+});
+
+renderMats('all', '');
+
 </script>
 </body>
 </html>
