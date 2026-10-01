@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>body{margin:0}</style>
+<title>Injection Cycle B-26</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Bai+Jamjuree:wght@600;700&display=swap">
+<style>
+/* Layout: single teaching column (max 1080px), simulator full-width, monitor cards in auto-fit grid */
+:root{
+  --bg:#f2f3f1; --surface:#ffffff; --ink:#1c2226; --muted:#5b666c; --line:#d6dbd8;
+  --steel:#45555e; --steel-2:#9aa8b0; --steel-3:#e3e8ea;
+  --melt:#d0651c; --melt-soft:#f6dcc8; --cold:#4a5a63;
+  --blue:#2c6aa6; --blue-soft:#dde9f5; --good:#2d7a4c; --good-soft:#dcefe3; --bad:#b0362c; --bad-soft:#f6dedb; --warn:#9a6a08; --warn-soft:#f6ebcf;
+  --display:"Bai Jamjuree","IBM Plex Sans Thai",system-ui,sans-serif;
+  --body:"IBM Plex Sans Thai",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121618; --surface:#1a2023; --ink:#e6ebe8; --muted:#9ba7ac; --line:#2b3438;
+  --steel:#a7b6bd; --steel-2:#5e6e76; --steel-3:#252e32;
+  --melt:#e6803a; --melt-soft:#3d2616; --cold:#7d8e97;
+  --blue:#6aa3dc; --blue-soft:#18293a; --good:#5fb683; --good-soft:#16291e; --bad:#e2766b; --bad-soft:#341a17; --warn:#d9a640; --warn-soft:#2f2612; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121618; --surface:#1a2023; --ink:#e6ebe8; --muted:#9ba7ac; --line:#2b3438;
+  --steel:#a7b6bd; --steel-2:#5e6e76; --steel-3:#252e32;
+  --melt:#e6803a; --melt-soft:#3d2616; --cold:#7d8e97;
+  --blue:#6aa3dc; --blue-soft:#18293a; --good:#5fb683; --good-soft:#16291e; --bad:#e2766b; --bad-soft:#341a17; --warn:#d9a640; --warn-soft:#2f2612; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.7;padding-inline:16px;padding-block:0 48px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--display);line-height:1.25;text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,5vw,44px);font-weight:700;letter-spacing:-.01em}
+h2{font-size:clamp(22px,3.2vw,28px);font-weight:700}
+h3{font-size:18px;font-weight:600}
+p{margin:0;max-width:68ch}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+section{display:flex;flex-direction:column;gap:18px}
+.lead{color:var(--muted);font-size:17px}
+
+/* header: condition-sheet strip */
+header{padding-block:40px 0;display:flex;flex-direction:column;gap:18px}
+.sheet{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border:1px solid var(--line);border-radius:6px;background:var(--surface);overflow:hidden}
+.sheet div{padding:10px 14px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:2px;min-width:0}
+.sheet span{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sheet b{font-family:var(--mono);font-weight:500;font-size:15px}
+
+/* simulator */
+.sim{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px;display:flex;flex-direction:column;gap:16px}
+.svgbox{overflow-x:auto}
+.svgbox svg{display:block;width:100%;min-width:640px;height:auto}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.ro{background:var(--steel-3);border-radius:6px;padding:8px 12px;display:flex;flex-direction:column}
+.ro span{font-size:12px;color:var(--muted)}
+.ro b{font-family:var(--mono);font-weight:500;font-size:20px;font-variant-numeric:tabular-nums}
+.ro b small{font-size:12px;color:var(--muted);font-weight:400;margin-left:4px}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.controls input[type=range]{flex:1;min-width:200px;accent-color:var(--melt)}
+button{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--steel-2);border-radius:6px;padding:6px 14px;cursor:pointer}
+button:hover{border-color:var(--ink)}
+button:focus-visible,input:focus-visible,.phase:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink);min-width:96px}
+.tnow{font-family:var(--mono);font-size:15px;min-width:110px}
+.phasebar{display:flex;height:30px;border-radius:5px;overflow:hidden;font-size:11px;font-family:var(--mono)}
+.phasebar div{display:flex;align-items:center;justify-content:center;color:var(--ink);border-right:2px solid var(--surface);white-space:nowrap;overflow:hidden;cursor:pointer;opacity:.55;transition:opacity .2s}
+.phasebar div.on{opacity:1;outline:2px solid var(--ink);outline-offset:-2px}
+.phasecard{border-left:4px solid var(--melt);border-radius:0;padding:4px 0 4px 16px;display:flex;flex-direction:column;gap:6px;min-height:150px}
+.phasecard h3{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.phasecard h3 .mono{font-size:13px;color:var(--muted);font-weight:400}
+.phasecard ul{margin:0;padding-left:20px}
+.phasecard li{max-width:70ch}
+.tag{font-family:var(--mono);font-size:12px;background:var(--steel-3);border-radius:4px;padding:1px 6px;white-space:nowrap}
+
+/* steps list */
+.phases{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;counter-reset:ph}
+.phase{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:4px;text-align:left}
+.phase:hover{border-color:var(--steel-2)}
+.phase .n{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.phase b{font-family:var(--display);font-size:16px;font-weight:600}
+.phase small{color:var(--muted);font-size:13px;line-height:1.5}
+
+/* charts */
+.chartlab{font-size:13px;color:var(--muted);margin:10px 0 0 70px}
+.cbox{position:relative;width:100%}
+.timers{display:flex;flex-direction:column;gap:4px;margin-top:10px}
+.gr{position:relative;height:24px}
+.gl{position:absolute;left:0;width:66px;font-family:var(--mono);font-size:10.5px;color:var(--muted);line-height:24px;white-space:nowrap;overflow:hidden}
+.gt{position:absolute;left:70px;right:8px;top:0;bottom:0;border-left:1px solid var(--line)}
+.gb{position:absolute;top:5px;height:14px;border-radius:3px}
+.gv{position:absolute;top:0;font-family:var(--mono);font-size:11px;line-height:24px;white-space:nowrap}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--muted);margin-left:70px}
+.legend span{display:flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:2px;display:inline-block}
+
+/* monitor cards */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.mcard{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.mcard .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.mcard .name{font-family:var(--mono);font-weight:500;font-size:14px}
+.mcard .val{font-family:var(--mono);font-size:20px;font-variant-numeric:tabular-nums}
+.kind{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;border-radius:3px;padding:1px 6px;align-self:flex-start}
+.k-point{background:var(--melt-soft);color:var(--melt)}
+.k-time{background:var(--blue-soft);color:var(--blue)}
+.k-limit{background:var(--steel-3);color:var(--muted)}
+.mcard dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:14px;line-height:1.55}
+.mcard dt{color:var(--muted)}
+.mcard dd{margin:0;min-width:0}
+.mcard button{align-self:flex-start;font-size:13px;padding:4px 10px}
+.flag{color:var(--warn);font-weight:500}
+
+/* notes */
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.note{background:var(--warn-soft);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.note h3{font-size:16px;color:var(--warn)}
+.note p{font-size:15px}
+
+/* quiz */
+.quiz{display:flex;flex-direction:column;gap:14px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.q .opts{display:flex;flex-direction:column;gap:6px}
+.q .opt{text-align:left;border-color:var(--line);padding:8px 12px;font-size:15px}
+.q .opt.right{background:var(--good-soft);border-color:var(--good);color:var(--ink)}
+.q .opt.wrong{background:var(--bad-soft);border-color:var(--bad);color:var(--ink)}
+.q .fb{font-size:14px;color:var(--muted)}
+.q .fb b{color:var(--ink)}
+.score{font-family:var(--mono);font-size:15px}
+table.kv{border-collapse:collapse;width:100%;font-size:14px}
+table.kv th,table.kv td{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.kv th{font-weight:500;color:var(--muted);font-size:13px}
+.tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+
+/* svg parts */
+.s-steel{fill:var(--steel-3);stroke:var(--steel-2);stroke-width:1.2}
+.s-dark{fill:var(--steel);}
+.s-line{stroke:var(--steel-2);stroke-width:1;fill:none}
+.s-heat{fill:var(--melt);opacity:.28}
+.s-txt{fill:var(--muted);font-family:var(--mono);font-size:11px}
+.s-txt-ink{fill:var(--ink);font-family:var(--mono);font-size:12px}
+.s-melt{fill:var(--melt)}
+.s-flight{stroke:var(--steel);stroke-width:3}
+.s-arrow{stroke:var(--blue);stroke-width:2;fill:none}
+.s-arrow-fill{fill:var(--blue)}
+.s-pellet{fill:var(--steel-2)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">สื่อการสอน · Injection Molding Process</span>
+  <h1>หนึ่งรอบการฉีด อ่านจากใบ Condition</h1>
+  <p class="lead">ลากแถบเวลาหรือกดเล่น เพื่อดูว่าสกรู แม่พิมพ์ และ ejector ขยับอย่างไรในแต่ละวินาทีของ cycle 17.89 sec พร้อมกราฟและค่า monitor ที่เครื่องวัด ตัวเลขทั้งหมดมาจากใบ Injection Condition Sheet ของเครื่อง B-26</p>
+  <div class="sheet" aria-label="ข้อมูลจากใบ condition">
+    <div><span>Machine</span><b>Fanuc B-26 · 50 ton</b></div>
+    <div><span>Screw dia</span><b>20 mm</b></div>
+    <div><span>Part</span><b>DI Base Plate</b></div>
+    <div><span>Part no.</span><b>A362305</b></div>
+    <div><span>Resin</span><b>PC F40-40 Black</b></div>
+    <div><span>Cavity</span><b>1/1</b></div>
+    <div><span>Shot weight</span><b>5.936 g</b></div>
+    <div><span>Cycle</span><b>17.89 s</b></div>
+  </div>
+</header>
+
+<section id="sim">
+  <span class="eyebrow">ส่วนที่ 1</span>
+  <h2>Simulator: เครื่องขยับอย่างไร</h2>
+  <p>สกรูของเครื่องไฟฟ้าแบบ Fanuc มี servo 2 ตัวแยกกัน ตัวหนึ่งดันสกรูเดินหน้าถอยหลัง อีกตัวหมุนสกรู ภาพด้านล่างแสดงทั้งสองแกนพร้อมกับการเปิดปิดแม่พิมพ์ ลวดลายเกลียวสกรูจะเลื่อนเมื่อสกรูหมุน</p>
+  <div class="sim">
+    <div class="phasebar" id="phasebar" role="tablist" aria-label="จังหวะใน cycle"></div>
+    <div class="svgbox">
+    <svg id="mach" viewBox="0 0 900 300" role="img" aria-label="ภาพตัดหน่วยฉีดและแม่พิมพ์ แสดงตำแหน่งสกรู เนื้อพลาสติกเหลว และการเปิดปิดแม่พิมพ์ตามเวลา">
+      <defs>
+        <clipPath id="screwClip"><rect id="screwClipRect" x="96" y="123" width="400" height="34"/></clipPath>
+      </defs>
+      <!-- motor -->
+      <rect x="18" y="98" width="72" height="84" rx="6" class="s-dark"/>
+      <text x="54" y="136" text-anchor="middle" class="s-txt" style="fill:var(--bg)">SERVO</text>
+      <text x="54" y="152" text-anchor="middle" class="s-txt" style="fill:var(--bg)">inj + rot</text>
+      <!-- hopper -->
+      <polygon points="168,30 248,30 222,96 194,96" class="s-steel"/>
+      <rect x="194" y="96" width="28" height="16" class="s-steel"/>
+      <g id="pellets">
+        <circle cx="190" cy="48" r="3" class="s-pellet"/><circle cx="202" cy="44" r="3" class="s-pellet"/><circle cx="214" cy="50" r="3" class="s-pellet"/><circle cx="226" cy="45" r="3" class="s-pellet"/>
+        <circle cx="196" cy="58" r="3" class="s-pellet"/><circle cx="208" cy="62" r="3" class="s-pellet"/><circle cx="220" cy="58" r="3" class="s-pellet"/><circle cx="208" cy="76" r="3" class="s-pellet"/>
+      </g>
+      <text x="208" y="22" text-anchor="middle" class="s-txt">Hopper</text>
+      <!-- barrel -->
+      <rect x="150" y="112" width="490" height="56" rx="3" class="s-steel"/>
+      <!-- heater bands -->
+      <g>
+        <rect x="190" y="104" width="40" height="8" class="s-heat"/><rect x="190" y="168" width="40" height="8" class="s-heat"/>
+        <rect x="300" y="104" width="70" height="8" class="s-heat"/><rect x="300" y="168" width="70" height="8" class="s-heat"/>
+        <rect x="400" y="104" width="70" height="8" class="s-heat"/><rect x="400" y="168" width="70" height="8" class="s-heat"/>
+        <rect x="500" y="104" width="70" height="8" class="s-heat"/><rect x="500" y="168" width="70" height="8" class="s-heat"/>
+        <text x="210" y="192" text-anchor="middle" class="s-txt">Jacket 60°</text>
+        <text x="335" y="192" text-anchor="middle" class="s-txt">B3 280°</text>
+        <text x="435" y="192" text-anchor="middle" class="s-txt">B2 290°</text>
+        <text x="535" y="192" text-anchor="middle" class="s-txt">B1 300°</text>
+        <text x="660" y="192" text-anchor="middle" class="s-txt">N 295°</text>
+      </g>
+      <!-- melt reservoir -->
+      <rect id="melt" x="400" y="117" width="225" height="46" class="s-melt" opacity=".9"/>
+      <!-- nozzle -->
+      <polygon points="640,122 676,134 676,146 640,158" class="s-steel"/>
+      <rect id="nozzleMelt" x="640" y="137" width="36" height="6" class="s-melt"/>
+      <!-- screw: shaft + body + tip -->
+      <rect id="shaft" x="90" y="134" width="60" height="12" class="s-dark"/>
+      <g id="screw">
+        <rect id="screwBody" x="96" y="123" width="400" height="34" rx="3" style="fill:var(--steel-2)"/>
+        <g clip-path="url(#screwClip)"><g id="flights"></g></g>
+        <polygon id="tip" points="0,0" class="s-dark"/>
+      </g>
+      <text id="checkTxt" x="0" y="214" text-anchor="middle" class="s-txt">check ring</text>
+      <line id="checkLine" x1="0" y1="168" x2="0" y2="202" class="s-line" stroke-dasharray="3 3"/>
+      <!-- injection force arrow -->
+      <g id="injArrow">
+        <g id="injArrowG">
+          <line x1="96" y1="236" x2="170" y2="236" class="s-arrow"/>
+          <polygon points="170,230 182,236 170,242" class="s-arrow-fill"/>
+        </g>
+        <text x="96" y="262" class="s-txt" style="fill:var(--blue)" id="injArrowTxt">สกรูดันไปข้างหน้า</text>
+      </g>
+      <!-- rotation indicator -->
+      <g id="rotInd">
+        <path d="M 40 210 A 16 16 0 1 1 68 210" class="s-arrow"/>
+        <polygon points="64,203 72,212 61,214" class="s-arrow-fill"/>
+        <text x="54" y="246" text-anchor="middle" class="s-txt" style="fill:var(--blue)">40 rpm</text>
+      </g>
+
+      <!-- fixed platen + fixed half -->
+      <rect x="676" y="38" width="20" height="220" class="s-dark"/>
+      <rect x="696" y="64" width="54" height="172" class="s-steel"/>
+      <rect id="sprue" x="676" y="137" width="64" height="6" class="s-melt"/>
+      <text x="723" y="276" text-anchor="middle" class="s-txt">Fixed (cav) 105°</text>
+      <!-- moving side group -->
+      <g id="moving">
+        <rect x="750" y="64" width="54" height="172" class="s-steel"/>
+        <rect x="804" y="38" width="20" height="220" class="s-dark"/>
+        <rect id="pin1" x="760" y="118" width="44" height="4" style="fill:var(--steel)"/>
+        <rect id="pin2" x="760" y="178" width="44" height="4" style="fill:var(--steel)"/>
+        <text x="787" y="276" text-anchor="middle" class="s-txt">Moving (core) 105°</text>
+      </g>
+      <!-- part -->
+      <rect id="part" x="738" y="112" width="24" height="76" rx="2" class="s-melt"/>
+      <rect id="cavOutline" x="738" y="112" width="24" height="76" rx="2" fill="none" stroke="var(--steel-2)" stroke-dasharray="3 2"/>
+      <text id="clampTxt" x="763" y="28" text-anchor="middle" class="s-txt-ink">Clamp 50 ton</text>
+      <text id="moldTxt" x="845" y="150" class="s-txt" text-anchor="start"></text>
+    </svg>
+    </div>
+    <div class="controls">
+      <button class="primary" id="play" type="button">▶ เล่น</button>
+      <input type="range" id="t" min="0" max="17.89" step="0.01" value="3.8" aria-label="เวลาใน cycle (วินาที)">
+      <span class="tnow" id="tnow">t = 3.80 s</span>
+      <button type="button" id="slow">ความเร็ว ×1</button>
+    </div>
+    <div class="readout">
+      <div class="ro"><span>Screw position</span><b id="r-pos">–</b></div>
+      <div class="ro"><span>Screw velocity</span><b id="r-vel">–</b></div>
+      <div class="ro"><span>Pressure</span><b id="r-pr">–</b></div>
+      <div class="ro"><span>Screw rpm</span><b id="r-rpm">–</b></div>
+      <div class="ro"><span>Mold opening</span><b id="r-mold">–</b></div>
+      <div class="ro"><span>Ejector</span><b id="r-ej">–</b></div>
+    </div>
+    <div class="phasecard" id="phasecard" aria-live="polite"></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">ส่วนที่ 2</span>
+  <h2>ลำดับจังหวะทั้ง 9 ขั้น</h2>
+  <p>กดที่การ์ดเพื่อกระโดดไปดูจังหวะนั้นใน simulator</p>
+  <div class="phases" id="phases"></div>
+</section>
+
+<section>
+  <span class="eyebrow">ส่วนที่ 3</span>
+  <h2>กราฟ 1 cycle และจุดที่เครื่องวัดค่า monitor</h2>
+  <p>ทุกกราฟใช้แกนเวลาเดียวกัน เส้นตั้งสีส้มคือเวลาปัจจุบันใน simulator คลิกบนกราฟเพื่อเลื่อนเวลาได้ จุดสีส้มคือค่าที่เครื่องจับไว้ แถบด้านล่างคือค่าที่เป็นเวลา</p>
+  <div class="sim">
+    <div class="chartlab">Screw position (mm)</div>
+    <div class="cbox" style="height:190px"><canvas id="c1" role="img" aria-label="กราฟตำแหน่งสกรูตลอด cycle พร้อมจุด V-P POS, MIN CUSH, EXTR START">ตำแหน่งสกรูจาก 28 mm ลงไป 6.51 mm แล้วถอยกลับไป 28 mm</canvas></div>
+    <div class="chartlab">Screw velocity (mm/s) · บวก = เดินหน้า, ลบ = ถอยหลัง</div>
+    <div class="cbox" style="height:190px"><canvas id="c4" role="img" aria-label="กราฟความเร็วสกรูตลอด cycle: ฉีด 50 mm/s, pack ไม่เกิน 30 mm/s, recovery ถอยราว 2.2 mm/s, decompression ถอย 13 mm/s">ความเร็วสกรู ฉีด 50 mm/s แล้วลดลงช่วง pack ถอยช้าช่วง recovery และถอยเร็วช่วง decompression</canvas></div>
+    <div class="chartlab">Pressure (kgf/cm²)</div>
+    <div class="cbox" style="height:190px"><canvas id="c2" role="img" aria-label="กราฟแรงดันตลอด cycle พร้อมจุด V-P PRS และ PEAK PRS">แรงดันขึ้นถึง 658 ที่ V-P แล้ว 800 ช่วง pack</canvas></div>
+    <div class="chartlab">Mold opening (mm, 0 = ปิดสนิท)</div>
+    <div class="cbox" style="height:130px"><canvas id="c3" role="img" aria-label="กราฟการเปิดปิดแม่พิมพ์ตลอด cycle">แม่พิมพ์ปิดช่วง 1.7 ถึง 13 วินาที</canvas></div>
+    <div class="chartlab">Timer monitor</div>
+    <div class="timers" id="gantt"></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--melt);border-radius:50%"></i>ค่า monitor (จุดวัด)</span>
+      <span><i class="sw" style="background:var(--blue)"></i>เวลาที่วัดได้จริง</span>
+      <span><i class="sw" style="background:var(--steel-3);border:1px solid var(--steel-2)"></i>เวลาที่ตั้งไว้</span>
+      <span><i class="sw" style="border:1px dashed var(--muted)"></i>Limit (ไม่ใช่ค่าวัด)</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">ส่วนที่ 4</span>
+  <h2>ค่า monitor แต่ละตัววัดตรงไหน</h2>
+  <p>ค่าบนหน้า monitor มี 3 ประเภท คือค่าที่วัด ณ จุดเดียว ค่าที่เป็นช่วงเวลา และค่า limit ที่เป็นเพดานป้องกัน กดปุ่มในการ์ดเพื่อดูจังหวะที่ค่านั้นเกิดขึ้น</p>
+  <div class="mgrid" id="mgrid"></div>
+</section>
+
+<section>
+  <span class="eyebrow">ส่วนที่ 5</span>
+  <h2>ข้อสังเกตจากใบ condition นี้</h2>
+  <div class="notes">
+    <div class="note"><h3>V-P POS ไม่ตรงค่าที่ตั้ง</h3><p>ตั้ง POS TRANSF ไว้ 14 mm แต่ monitor อ่านได้ 16.00 mm ควรเช็คว่าตั้งเงื่อนไข V-P อื่น (pressure หรือ time) ไว้ด้วยหรือไม่ หรือค่า monitor มาจากคนละ trial กับค่าที่ตั้ง</p></div>
+    <div class="note"><h3>Recovery นานกว่า Cooling</h3><p>RECOV TIME 7.25 s มากกว่า COOL TIME 7 s แม่พิมพ์จึงต้องรอ recovery เสร็จก่อนเปิด ถ้า recovery แกว่ง เวลาที่ชิ้นงานอยู่ในแม่พิมพ์และ dimension จะแกว่งตาม ควรให้ cooling มากกว่า recovery อย่างน้อย 0.5 ถึง 1 s</p></div>
+    <div class="note"><h3>สัดส่วนการเติมก่อน V-P</h3><p>สกรู Ø20 ได้ราว 0.314 cm³ ต่อ mm ช่วงก่อนสลับ V-P เติมเนื้อได้ราว 60% ของ shot ส่วนที่เหลือเข้าช่วง pack ซึ่งต่างจากหลักทั่วไปที่ 95 ถึง 98% ควรยืนยันด้วย short shot study</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="eyebrow">ส่วนที่ 6</span>
+  <h2>แบบทดสอบท้ายบท</h2>
+  <div class="quiz" id="quiz"></div>
+  <div class="score" id="score">คะแนน 0 / 7</div>
+</section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const T=17.89;
+const D={
+ screw:[[0,28],[2.0,28],[2.3,16],[2.6,9.5],[3.2,7.3],[5.3,6.51],[5.5,8.82],[12.75,25],[13.0,28],[T,28]],
+ pres:[[0,0],[2.0,0],[2.15,320],[2.3,658],[2.35,800],[5.3,800],[5.32,160],[5.5,160],[5.52,60],[12.75,60],[12.8,0],[T,0]],
+ rpm:[[0,0],[5.5,0],[5.55,40],[12.75,40],[12.8,0],[T,0]],
+ mold:[[0,211],[1.0,85],[1.7,0],[13.0,0],[13.3,30],[14.3,160],[14.8,211],[T,211]],
+ ej:[[0,0],[15.6,0],[15.9,8],[16.0,5],[16.1,0],[16.3,8],[16.4,5],[16.5,0],[T,0]],
+ vel:[[0,0],[2.0,0],[2.03,50],[2.3,50],[2.31,30],[2.45,26],[2.6,15],[3.2,3.7],[3.5,1.0],[5.3,0],[5.31,-11.5],[5.5,-11.5],[5.52,-2.23],[12.75,-2.23],[12.76,-13],[12.98,-13],[13.0,0],[T,0]]
+};
+function lerp(a,t){if(t<=a[0][0])return a[0][1];for(let i=1;i<a.length;i++){if(t<=a[i][0]){const[x0,y0]=a[i-1],[x1,y1]=a[i];return x1===x0?y1:y0+(y1-y0)*(t-x0)/(x1-x0);}}return a[a.length-1][1];}
+
+const P=[
+ {k:'close',s:0,e:2.0,c:'--blue-soft',name:'Mold close + clamp',short:'Close',
+  li:['ปิดเร็ว 150 mm/s จาก 211 mm เพื่อลด cycle time','เข้าโซน Mold Protect ที่ 85 mm ชะลอเป็น 120 mm/s ถ้าแรงต้านเกิน 6% เครื่องหยุดทันที กัน core pin เล็กหัก','หน้าแม่พิมพ์แตะกันที่ TOUCH 54.84 mm แล้วเพิ่มแรงล็อคเป็น 50 ton','Sprue brake OFF: nozzle แนบ sprue bushing ตลอด อุณหภูมิปลาย nozzle คงที่'],tags:['CLOSE 4 step','PRTCT 85 mm','TOUCH 54.84','MOLD PROTECT 6%']},
+ {k:'inj',s:2.0,e:2.3,c:'--bad-soft',name:'Injection (fill)',short:'Inj',
+  li:['สกรูไม่หมุน เดินหน้าเหมือนลูกสูบ check ring ปิดกันเนื้อไหลย้อน','คุมด้วยความเร็ว 50 mm/s แรงดันขึ้นเองตามความต้านทานของการไหล','จับเวลาเป็น INJCT TIME = 0.300 s (limit 0.5 s) แรงดันเพดาน 1300'],tags:['50 mm/s','ACCEL A','MAX INJ PRES 1300','MAX INJ TIME 0.5 s']},
+ {k:'pack',s:2.3,e:5.3,c:'--warn-soft',name:'V-P switch → Pack / Hold',short:'Pack',
+  li:['ที่ตำแหน่ง V-P เครื่องเปลี่ยนจากคุมความเร็วเป็นคุมแรงดัน (monitor V-P POS 16.00, V-P PRS 658)','Pack 800 kgf/cm² นาน 3 s สกรูยังคืบช้าๆ เติมเนื้อชดเชยการหดตัว จน gate freeze','ความเร็วสกรูช่วงนี้ไม่เกิน MAX PACK VEL 30 mm/s','จุดที่สกรูเดินไปไกลสุดคือ MIN CUSH 6.51 mm'],tags:['POS TRANSF 14','PACK 800 × 3 s','MAX PACK VEL 30']},
+ {k:'bef',s:5.3,e:5.5,c:'--warn-soft',name:'BEF EXT (ก่อน recovery)',short:'',
+  li:['ลดแรงดันเหลือ 160 kgf/cm² นาน 0.2 s เพื่อปลดแรงดันแบบนุ่มนวล','melt คลายตัว ดันสกรูถอยจาก 6.51 ไป 8.82 mm = EXTR START'],tags:['160 × 0.2 s']},
+ {k:'rec',s:5.5,e:12.75,c:'--good-soft',name:'Cooling + Recovery (พร้อมกัน)',short:'Cooling + recovery',
+  li:['Cooling timer 7 s นับหลังจบ pack แม่พิมพ์ปิดนิ่ง น้ำจาก MTC 105°C ดึงความร้อน','พร้อมกันนั้นสกรูหมุน 40 rpm ลำเลียงเม็ดจาก hopper ไปหลอมด้วย heater และ shear','melt สะสมหน้าหัวสกรู ดันสกรูถอยไปถึง shot size 25 mm โดยมี back pressure 60 ต้าน ให้ melt แน่นและสม่ำเสมอ','RECOV TIME 7.25 s นานกว่า cooling จึงเป็นตัวกำหนดจังหวะเปิดแม่พิมพ์'],tags:['COOL 7 s','40 rpm','BP 60','SHOT 25 mm']},
+ {k:'dcmp',s:12.75,e:13.0,c:'--good-soft',name:'Decompression (suck back)',short:'',
+  li:['สกรูถอยเพิ่ม 3 mm (25 → 28) ที่ 13 mm/s โดยไม่หมุน','ลดแรงดันใน melt กันพลาสติกยืดย้อยออกจาก nozzle (drool)'],tags:['DCMP 3 mm','13 mm/s']},
+ {k:'open',s:13.0,e:14.8,c:'--blue-soft',name:'Mold open',short:'Open',
+  li:['เปิดได้เมื่อทั้ง cooling และ recovery+decompression เสร็จ','Breakaway ช้าก่อน กันชิ้นงานผนังบางถูกดึงเสียรูป แล้วเปิดเร็ว และชะลอ 60 mm/s ก่อนถึงเปิดสุด'],tags:['OPEN 4 step','FULL OPEN 211']},
+ {k:'ej',s:14.8,e:16.5,c:'--steel-3',name:'Ejector',short:'Eject',
+  li:['EJCT START = Full open แล้วรอ DELAY 0.8 s','ดัน 2 จังหวะ: FWD 8 mm @30 mm/s แล้ว ADV MID 5 mm @15 mm/s ถอดชิ้นงานบางออกจาก core ช้าๆ','REV กลับ 0 mm @150 mm/s ทำซ้ำ COUNT 2 ครั้ง (2ST-B)'],tags:['DELAY 0.8 s','FWD 8 mm','COUNT 2']},
+ {k:'take',s:16.5,e:T,c:'--steel-3',name:'Take-out → รอบใหม่',short:'',
+  li:['หยิบชิ้นงานและ runner ออก แล้วเริ่มปิดแม่พิมพ์รอบถัดไป','CYCLE TIME วัดจากปิดแม่พิมพ์ถึงปิดแม่พิมพ์รอบถัดไป = 17.89 s'],tags:['CYCLE 17.89 s']}
+];
+function phaseAt(t){for(const p of P){if(t<p.e)return p;}return P[P.length-1];}
+
+const M=[
+ {n:'V-P POS',v:'16.00 mm',kind:'point',t:2.3,where:'ตำแหน่งสกรู ณ วินาทีที่สลับจากฉีดไป pack',tell:'สลับตรงตำแหน่งที่ตั้งหรือไม่',watch:'<span class="flag">ตั้ง 14 แต่อ่านได้ 16 ต้องเช็คเงื่อนไข V-P</span>'},
+ {n:'V-P PRS',v:'658 kgf/cm²',kind:'point',t:2.3,where:'แรงดันฉีด ณ วินาทีที่สลับ V-P',tell:'ความต้านทานการไหล ชี้ความหนืดของ melt',watch:'แกว่งตาม lot วัสดุ ความชื้น อุณหภูมิ barrel vent ตัน'},
+ {n:'PEAK PRS',v:'800 kgf/cm²',kind:'point',t:3.8,where:'แรงดันสูงสุดตลอดช่วงฉีดและ pack',tell:'เท่ากับ pack 800 แปลว่าไม่มี spike ตอน V-P',watch:'เกิน 800 แปลว่ามี spike เสี่ยง flash และ dimension โต'},
+ {n:'MIN CUSH',v:'6.51 mm',kind:'point',t:5.3,where:'ตำแหน่งที่สกรูเดินไปไกลสุด ช่วงปลาย pack',tell:'ยังเหลือเนื้อให้ส่งแรงดัน pack หรือไม่ 0 = bottom out',watch:'แกว่งมาก สงสัย check ring สึกหรือ recovery ไม่คงที่'},
+ {n:'EXTR START',v:'8.82 mm',kind:'point',t:5.5,where:'ตำแหน่งสกรูตอนเริ่มหมุน recovery',tell:'ระยะเด้งกลับหลังปลดแรงดัน (6.51 → 8.82)',watch:'แกว่ง ดูความแน่นของ melt และ gate freeze'},
+ {n:'INJCT TIME',v:'0.300 s',kind:'time',t:2.15,where:'เริ่มฉีด → สลับ V-P',tell:'ใช้เวลาเติมโพรงเท่าไร',watch:'ยาวขึ้น = melt หนืดขึ้น หรือสกรูวิ่งไม่ถึงความเร็วที่ตั้ง'},
+ {n:'RECOV TIME',v:'7.25 s',kind:'time',t:9.0,where:'เริ่มหมุนสกรู → ถอยถึง shot size',tell:'ความเสถียรของการหลอม',watch:'<span class="flag">นานกว่า cooling 7 s จึงคุมจังหวะเปิดแม่พิมพ์</span>'},
+ {n:'CYCLE TIME',v:'17.89 s',kind:'time',t:0.5,where:'ปิดแม่พิมพ์ → ปิดแม่พิมพ์รอบถัดไป',tell:'เวลาทั้งรอบ',watch:'แกว่ง ให้หาว่าช่วงไหนยืด มักเป็น recovery หรือ take-out'},
+ {n:'MAX INJ TIME',v:'0.5 s',kind:'limit',t:2.2,where:'ทำงานช่วงฉีด',tell:'ฉีดเกิน 0.5 s เกิด alarm หรือบังคับสลับ V-P',watch:'ใช้จริง 0.3 s ยังมี margin'},
+ {n:'MAX PACK VEL',v:'30 mm/s',kind:'limit',t:2.45,where:'ทำงานช่วงต้น pack',tell:'จำกัดความเร็วสกรูตอนแรงดันกระโดดขึ้น 800',watch:'กันสกรูพุ่งอัดเนื้อจน flash หรือ overpack'}
+];
+const kindLab={point:'จุดวัด',time:'เวลา',limit:'limit'};
+
+/* ---------- build static UI ---------- */
+const pb=document.getElementById('phasebar');
+P.forEach((p,i)=>{const d=document.createElement('div');d.style.flex=(p.e-p.s);d.style.background='var('+p.c+')';d.textContent=p.short;d.title=p.name;d.dataset.i=i;d.setAttribute('role','tab');d.onclick=()=>setT(p.s+0.01);pb.appendChild(d);});
+const ph=document.getElementById('phases');
+P.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.className='phase';b.innerHTML='<span class="n">ขั้นที่ '+(i+1)+' · '+p.s.toFixed(2)+'–'+p.e.toFixed(2)+' s</span><b>'+p.name+'</b><small>'+p.li[0]+'</small>';b.onclick=()=>{setT(p.s+0.01);document.getElementById('sim').scrollIntoView({behavior:'smooth'});};ph.appendChild(b);});
+const mg=document.getElementById('mgrid');
+M.forEach(m=>{const c=document.createElement('div');c.className='mcard';c.innerHTML='<div class="top"><span class="name">'+m.n+'</span><span class="val">'+m.v+'</span></div><span class="kind k-'+m.kind+'">'+kindLab[m.kind]+'</span><dl><dt>วัดที่</dt><dd>'+m.where+'</dd><dt>บอก</dt><dd>'+m.tell+'</dd><dt>เฝ้าดู</dt><dd>'+m.watch+'</dd></dl>';const b=document.createElement('button');b.type='button';b.textContent='ดูจังหวะนี้ → '+m.t.toFixed(2)+' s';b.onclick=()=>{setT(m.t);document.getElementById('sim').scrollIntoView({behavior:'smooth'});};c.appendChild(b);mg.appendChild(c);});
+
+/* gantt */
+const G=[['INJCT',2.0,2.3,'0.300 s','m'],['MAX INJ',2.0,2.5,'0.5 s limit','l'],['PACK',2.3,5.3,'3 s','s'],['COOL',5.3,12.3,'7 s','s'],['RECOV',5.5,12.75,'7.25 s','m'],['CYCLE',0,T,'17.89 s','m']];
+const gh=document.getElementById('gantt');
+G.forEach(r=>{const L=r[1]/T*100,W=(r[2]-r[1])/T*100;const st=r[4]==='m'?'background:var(--blue)':r[4]==='l'?'border:1px dashed var(--muted)':'background:var(--steel-3);border:1px solid var(--steel-2)';const inside=W>40;const vs=inside?'left:'+(L+1)+'%;padding-left:6px;color:'+(r[4]==='m'?'var(--surface)':'var(--ink)'):'left:calc('+(L+W)+'% + 6px);color:var(--ink)';gh.insertAdjacentHTML('beforeend','<div class="gr"><span class="gl">'+r[0]+'</span><div class="gt"><div class="gb" style="left:'+L+'%;width:'+W+'%;'+st+'"></div><span class="gv" style="'+vs+'">'+r[3]+'</span></div></div>');});
+
+/* flights */
+const fl=document.getElementById('flights');let fh='';for(let i=0;i<40;i++){const x=96+i*18;fh+='<line class="s-flight" x1="'+x+'" y1="123" x2="'+(x+12)+'" y2="157"/>';}fl.innerHTML=fh;
+
+/* ---------- charts ---------- */
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let tNow=3.8,charts=[];
+const markT=[2.0,2.3,5.3,5.5,13.0,14.8];
+const plug={id:'ann',afterDraw(c){const x=c.scales.x,y=c.scales.y,ctx=c.ctx,o=c.options.plugins.ann||{};ctx.save();
+ ctx.setLineDash([3,3]);ctx.strokeStyle=css('--line');ctx.lineWidth=1;markT.forEach(m=>{const p=x.getPixelForValue(m);ctx.beginPath();ctx.moveTo(p,y.top);ctx.lineTo(p,y.bottom);ctx.stroke();});ctx.setLineDash([]);
+ (o.lim||[]).forEach(l=>{ctx.setLineDash([4,3]);ctx.strokeStyle=css('--muted');const py=y.getPixelForValue(l.y);ctx.beginPath();ctx.moveTo(x.getPixelForValue(l.x0),py);ctx.lineTo(x.getPixelForValue(l.x1),py);ctx.stroke();ctx.setLineDash([]);ctx.font='11px "IBM Plex Mono",monospace';ctx.fillStyle=css('--muted');ctx.textAlign='left';ctx.fillText(l.t,x.getPixelForValue(l.x1)+6,py+4);});
+ (o.txt||[]).forEach(l=>{ctx.font='11px "IBM Plex Sans Thai",sans-serif';ctx.fillStyle=css('--muted');ctx.textAlign='left';ctx.fillText(l.t,x.getPixelForValue(l.x),y.getPixelForValue(l.y));});
+ (o.pts||[]).forEach(p=>{const px=x.getPixelForValue(p.x),py=y.getPixelForValue(p.y);ctx.beginPath();ctx.arc(px,py,5,0,7);ctx.fillStyle=css('--melt');ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=css('--surface');ctx.stroke();ctx.font='500 11px "IBM Plex Mono",monospace';ctx.fillStyle=css('--ink');ctx.textAlign=p.a||'left';ctx.fillText(p.t,px+(p.dx||0),py+(p.dy||0));});
+ const cx=x.getPixelForValue(tNow);ctx.strokeStyle=css('--melt');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,y.top);ctx.lineTo(cx,y.bottom);ctx.stroke();
+ ctx.restore();}};
+const CS=[
+ {id:'c1',d:D.screw,max:34,ann:{pts:[{x:2.3,y:16,t:'V-P POS 16.00',dx:9,dy:-6},{x:5.3,y:6.51,t:'MIN CUSH 6.51',a:'right',dx:-9,dy:12},{x:5.5,y:8.82,t:'EXTR START 8.82',dx:9,dy:14},{x:12.75,y:25,t:'SHOT 25',a:'right',dx:-9,dy:-4}],txt:[{x:2.9,y:14,t:'pack: ≤ 30 mm/s'}]}},
+ {id:'c4',d:D.vel,min:-20,max:65,ann:{pts:[{x:2.3,y:50,t:'INJ 50 mm/s',dx:9,dy:-4},{x:12.87,y:-13,t:'DCMP −13',a:'right',dx:-9,dy:4}],lim:[{x0:2.3,x1:5.3,y:30,t:'MAX PACK VEL 30 (limit)'}],txt:[{x:6.3,y:-8,t:'recovery: สกรูถอย ≈ 2.2 mm/s (16.18 mm ใน 7.25 s)'},{x:3.3,y:14,t:'pack: ช้าลงจน gate freeze'}]}},
+ {id:'c2',d:D.pres,max:1450,ann:{pts:[{x:2.3,y:658,t:'V-P PRS 658',a:'right',dx:-10,dy:-4},{x:3.8,y:800,t:'PEAK PRS 800',a:'center',dy:-11}],lim:[{x0:2.0,x1:2.5,y:1300,t:'MAX INJ PRES 1300'}],txt:[{x:6.3,y:170,t:'back pressure 60'}]}},
+ {id:'c3',d:D.mold,max:230,ann:{},last:true}
+];
+function buildCharts(){charts.forEach(c=>c.destroy());charts=[];
+ const tick=css('--muted'),grid=css('--line'),line=css('--blue');
+ CS.forEach(s=>{const ch=new Chart(document.getElementById(s.id),{type:'line',plugins:[plug],
+  data:{datasets:[{data:s.d.map(p=>({x:p[0],y:p[1]})),borderColor:line,backgroundColor:line+'22',fill:true,borderWidth:2,pointRadius:0,tension:0}]},
+  options:{responsive:true,maintainAspectRatio:false,animation:false,onClick:(e,_,c)=>{setT(c.scales.x.getValueForPixel(e.x));},
+   plugins:{ann:s.ann,legend:{display:false},tooltip:{intersect:false,mode:'index',callbacks:{title:i=>i[0].parsed.x.toFixed(2)+' s',label:c=>c.parsed.y.toFixed(2)}}},
+   scales:{x:{type:'linear',min:0,max:T,display:!!s.last,ticks:{color:tick,stepSize:2,callback:v=>v+' s'},grid:{display:false}},
+           y:{min:s.min||0,max:s.max,afterFit:a=>{a.width=70},ticks:{color:tick,maxTicksLimit:3},grid:{color:grid}}}}});charts.push(ch);});}
+if(window.Chart){buildCharts();}
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(window.Chart)buildCharts();});new MutationObserver(()=>{if(window.Chart)buildCharts();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+
+/* ---------- simulator render ---------- */
+const $=id=>document.getElementById(id);
+const K=7, TIPMAX=625;
+function rotOffset(t){const a=Math.min(Math.max(t,5.5),12.75)-5.5;return (a*40)%18;}
+function render(){
+ const t=tNow,pos=lerp(D.screw,t),pr=lerp(D.pres,t),rpm=lerp(D.rpm,t),mold=lerp(D.mold,t),ej=lerp(D.ej,t);
+ const tip=TIPMAX-pos*K;
+ const bodyEnd=tip-14;
+ $('screwBody').setAttribute('width',bodyEnd-96);
+ $('screwClipRect').setAttribute('width',bodyEnd-96);
+ $('tip').setAttribute('points',bodyEnd+',123 '+tip+',140 '+bodyEnd+',157');
+ $('flights').setAttribute('transform','translate('+(-rotOffset(t))+',0)');
+ $('melt').setAttribute('x',tip);$('melt').setAttribute('width',Math.max(0,640-tip));
+ $('checkLine').setAttribute('x1',bodyEnd);$('checkLine').setAttribute('x2',bodyEnd);$('checkTxt').setAttribute('x',bodyEnd);
+ const injecting=t>=2.0&&t<5.3, recovering=t>=5.5&&t<12.75, dcmp=t>=12.75&&t<13.0;
+ $('injArrow').style.opacity=(injecting||recovering||dcmp)?1:0;
+ $('injArrowTxt').textContent=injecting?(t<2.3?'สกรูดันไปข้างหน้า 50 mm/s':'คุมแรงดัน pack 800'):recovering?'สกรูถูก melt ดันถอยหลัง (BP 60)':'ถอย decompression 3 mm';
+ $('injArrowG').setAttribute('transform',injecting?'translate(0,0)':'translate(278,0) scale(-1,1)');
+ $('rotInd').style.opacity=rpm>1?1:0;
+ // pellets fall slightly when rotating
+ $('pellets').setAttribute('transform','translate(0,'+(rpm>1?((t*30)%6):0)+')');
+ // mold
+ const gap=mold/211*60;
+ $('moving').setAttribute('transform','translate('+gap+',0)');
+ const closed=mold<0.5;
+ $('clampTxt').style.opacity=(closed&&t>1.6&&t<13.0)?1:0;
+ // fill fraction
+ let fill=0;if(t>=2.0&&t<2.3)fill=(t-2.0)/0.3*0.62;else if(t>=2.3&&t<3.2)fill=0.62+(t-2.3)/0.9*0.38;else if(t>=3.2)fill=1;
+ const coolF=Math.min(1,Math.max(0,(t-2.3)/10));
+ const part=$('part');
+ const ejected=t>=16.45||t<2.0;
+ const partX=738+gap-ej*2.2;
+ part.setAttribute('x',partX);
+ part.setAttribute('height',76*fill);part.setAttribute('y',188-76*fill);
+ part.style.fill=coolF>0.5?'var(--cold)':'var(--melt)';part.style.opacity=ejected?0:1;
+ $('cavOutline').setAttribute('x',738+(t>=13?gap:0));$('cavOutline').style.opacity=(t<2.0||t>=13.0)?.6:0;
+ $('sprue').style.opacity=(t>=2.0&&t<13.0)?1:0;$('sprue').style.fill=coolF>0.5?'var(--cold)':'var(--melt)';
+ $('pin1').setAttribute('x',760-ej*2.2);$('pin2').setAttribute('x',760-ej*2.2);
+ $('moldTxt').textContent=closed?'':mold.toFixed(0)+' mm';$('moldTxt').setAttribute('x',830+gap);
+ // readouts
+ $('r-pos').innerHTML=pos.toFixed(2)+'<small>mm</small>';
+ $('r-vel').innerHTML=lerp(D.vel,t).toFixed(1)+'<small>mm/s</small>';
+ $('r-pr').innerHTML=pr.toFixed(0)+'<small>kgf/cm²</small>';
+ $('r-rpm').innerHTML=rpm.toFixed(0)+'<small>rpm</small>';
+ $('r-mold').innerHTML=mold.toFixed(0)+'<small>mm</small>';
+ $('r-ej').innerHTML=ej.toFixed(1)+'<small>mm</small>';
+ $('tnow').textContent='t = '+t.toFixed(2)+' s';
+ const p=phaseAt(t),idx=P.indexOf(p);
+ [...pb.children].forEach((d,i)=>d.classList.toggle('on',i===idx));
+ const card=$('phasecard');
+ if(card.dataset.k!==p.k){card.dataset.k=p.k;card.innerHTML='<h3>ขั้นที่ '+(idx+1)+' · '+p.name+' <span class="mono">'+p.s.toFixed(2)+'–'+p.e.toFixed(2)+' s</span></h3><ul>'+p.li.map(x=>'<li>'+x+'</li>').join('')+'</ul><div style="display:flex;gap:6px;flex-wrap:wrap">'+p.tags.map(x=>'<span class="tag">'+x+'</span>').join('')+'</div>';}
+ charts.forEach(c=>c.draw());
+}
+function setT(t){tNow=Math.min(T,Math.max(0,t));$('t').value=tNow;render();}
+$('t').addEventListener('input',e=>setT(+e.target.value));
+let playing=false,speed=1,last=0;
+function loop(ts){if(!playing)return;if(last){let n=tNow+(ts-last)/1000*speed;if(n>T)n=0;setT(n);}last=ts;requestAnimationFrame(loop);}
+$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'❚❚ หยุด':'▶ เล่น';last=0;if(playing)requestAnimationFrame(loop);};
+$('slow').onclick=()=>{speed=speed===1?0.5:speed===0.5?0.25:1;$('slow').textContent='ความเร็ว ×'+speed;};
+render();
+
+/* ---------- quiz ---------- */
+const Q=[
+ {q:'ช่วงฉีด (fill) สกรูทำอะไร',o:['หมุนและเดินหน้า','เดินหน้าโดยไม่หมุน เหมือนลูกสูบ','หมุนอยู่กับที่','ถอยหลังพร้อมหมุน'],a:1,ex:'ช่วงฉีดและ pack สกรูไม่หมุน check ring ปิด สกรูดันเนื้อด้านหน้าเข้าแม่พิมพ์'},
+ {q:'MIN CUSH 6.51 mm วัดที่จังหวะไหน',o:['ตอนสลับ V-P','ตอนเริ่ม recovery','ตำแหน่งที่สกรูเดินไปไกลสุด ช่วงปลาย pack','ตอนเปิดแม่พิมพ์'],a:2,ex:'Cushion คือเนื้อที่เหลือหน้าสกรูตอนเดินไปไกลสุด ถ้าเป็น 0 แปลว่า bottom out ส่งแรงดัน pack ไม่ได้'},
+ {q:'PEAK PRS = 800 เท่ากับแรงดัน pack พอดี หมายความว่าอะไร',o:['ช่วงฉีดไม่มี spike เกินแรงดัน pack','เครื่องแรงดันไม่พอ','V-P สลับช้าเกินไป','แม่พิมพ์ flash'],a:0,ex:'แรงดันสูงสุดเกิดช่วง pack ไม่ใช่ช่วงฉีด ถ้า peak เกิน 800 แปลว่ามี spike ตอนสลับ V-P'},
+ {q:'ทำไมแม่พิมพ์ในใบนี้เปิดที่ราว 13.0 s ไม่ใช่ทันทีที่ cooling 7 s ครบ',o:['เพราะ delay ejector','เพราะ recovery 7.25 s นานกว่า cooling เครื่องรอให้ recovery เสร็จ','เพราะ mold protect','เพราะ BEF EXT'],a:1,ex:'เครื่องจะเปิดแม่พิมพ์เมื่อทั้ง cooling และ recovery+decompression เสร็จ recovery จึงคุมจังหวะ'},
+ {q:'Back pressure 60 kgf/cm² ทำงานช่วงไหน',o:['ช่วง pack','ช่วงฉีด','ช่วง recovery ขณะสกรูหมุนและถอย','ช่วงเปิดแม่พิมพ์'],a:2,ex:'Back pressure ต้านการถอยของสกรูขณะ recovery ทำให้ melt แน่น ไม่มีฟอง อุณหภูมิสม่ำเสมอ'},
+ {q:'MAX PACK VEL 30 mm/s เป็นค่าประเภทไหน',o:['ค่าที่วัดได้','ค่า limit จำกัดความเร็วสกรูช่วง pack','ความเร็วฉีด','ความเร็ว decompression'],a:1,ex:'เป็นเพดาน กันสกรูพุ่งตอนเพิ่งสลับ V-P แล้วแรงดันกระโดดขึ้น 800'},
+ {q:'Decompression 3 mm มีไว้ทำไม',o:['เพิ่ม shot size','ลดแรงดันใน melt กัน drool ที่ nozzle','ช่วย cooling','ลด cycle time'],a:1,ex:'สกรูถอยเพิ่มโดยไม่หมุน ดูดแรงดันออกจาก melt เนื้อจึงไม่ไหลยืดออกจาก nozzle'}
+];
+let score=0;const qz=$('quiz');
+Q.forEach((it,qi)=>{const box=document.createElement('div');box.className='q';box.innerHTML='<b>'+(qi+1)+'. '+it.q+'</b>';const opts=document.createElement('div');opts.className='opts';const fb=document.createElement('div');fb.className='fb';
+ it.o.forEach((o,oi)=>{const b=document.createElement('button');b.type='button';b.className='opt';b.textContent=o;b.onclick=()=>{if(box.dataset.done)return;box.dataset.done=1;
+  [...opts.children].forEach((x,xi)=>{if(xi===it.a)x.classList.add('right');});if(oi!==it.a)b.classList.add('wrong');else{score++;$('score').textContent='คะแนน '+score+' / '+Q.length;}
+  fb.innerHTML='<b>'+(oi===it.a?'ถูกต้อง':'ยังไม่ถูก')+'</b> '+it.ex;};opts.appendChild(b);});
+ box.appendChild(opts);box.appendChild(fb);qz.appendChild(box);});
+</script>
+
+</html>
