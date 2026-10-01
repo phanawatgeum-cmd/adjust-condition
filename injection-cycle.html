@@ -127,6 +127,17 @@ button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink);min
 .q .fb{font-size:14px;color:var(--muted)}
 .q .fb b{color:var(--ink)}
 .score{font-family:var(--mono);font-size:15px}
+nav.site{max-width:1080px;margin:0 auto;padding-block:14px 0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px}
+nav.site .brand{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:10px}
+nav.site a{color:var(--muted);text-decoration:none;padding:5px 12px;border-radius:6px;border:1px solid transparent}
+nav.site a:hover{color:var(--ink);border-color:var(--line)}
+nav.site a[aria-current="page"]{color:var(--ink);background:var(--surface);border-color:var(--line);font-weight:500}
+.mcard{scroll-margin-top:16px}
+.mcard:target{outline:2px solid var(--melt);outline-offset:1px}
+.xlink{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}
+.xlink span{color:var(--muted)}
+.xlink a{font-size:13px;text-decoration:none;color:var(--ink);background:var(--steel-3);border:1px solid var(--line);border-radius:4px;padding:1px 8px}
+.xlink a:hover{border-color:var(--steel-2)}
 table.kv{border-collapse:collapse;width:100%;font-size:14px}
 table.kv th,table.kv td{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
 table.kv th{font-weight:500;color:var(--muted);font-size:13px}
@@ -147,6 +158,11 @@ table.kv th{font-weight:500;color:var(--muted);font-size:13px}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 
+<nav class="site" aria-label="หน้าในชุดนี้">
+  <span class="brand">Injection PE</span>
+  <a href="injection-cycle.html" aria-current="page">รอบการฉีด (Cycle)</a>
+  <a href="injection-troubleshooting-th.html">แก้ปัญหางานฉีด</a>
+</nav>
 <div class="wrap">
 <header>
   <span class="eyebrow">สื่อการสอน · Injection Molding Process</span>
@@ -372,6 +388,13 @@ const M=[
  {n:'MAX PACK VEL',v:'30 mm/s',kind:'limit',t:2.45,where:'ทำงานช่วงต้น pack',tell:'จำกัดความเร็วสกรูตอนแรงดันกระโดดขึ้น 800',watch:'กันสกรูพุ่งอัดเนื้อจน flash หรือ overpack'}
 ];
 const kindLab={point:'จุดวัด',time:'เวลา',limit:'limit'};
+/* ลิงก์ไปหน้า injection-troubleshooting-th.html (#d-<id>) */
+const MID={'V-P POS':'m-vppos','V-P PRS':'m-vpprs','PEAK PRS':'m-peak','MIN CUSH':'m-mincush','EXTR START':'m-extr','INJCT TIME':'m-injt','RECOV TIME':'m-recov','CYCLE TIME':'m-cycle','MAX INJ TIME':'m-maxinj','MAX PACK VEL':'m-maxpack'};
+const DEF={shortshot:'ฉีดไม่เต็ม',flash:'ครีบเกิน',oversize:'ใหญ่เกินขนาด',undersize:'เล็กเกินขนาด',dimension:'ขนาดแกว่ง',sink:'รอยยุบ',void:'โพรงในเนื้อ',splay:'รอยเสี้ยนเงิน',specks:'จุดดำ',discolor:'สีเพี้ยน',flowmark:'รอยไหล',burn:'รอยไหม้',weld:'รอยประสาน',warp:'บิดงอ',sticking:'ติดแม่พิมพ์',blister:'ฟองพอง'};
+const MDEF={'V-P POS':['shortshot','flash'],'V-P PRS':['shortshot','dimension','weld'],'PEAK PRS':['flash','oversize'],'MIN CUSH':['sink','shortshot','dimension','void'],'EXTR START':['dimension'],'INJCT TIME':['shortshot','flowmark','burn'],'RECOV TIME':['dimension','splay'],'CYCLE TIME':['specks','discolor'],'MAX INJ TIME':['shortshot'],'MAX PACK VEL':['flash','oversize']};
+const PDEF={close:['sprue','flash'],inj:['shortshot','jetting','burn','flowmark','weld'],pack:['sink','undersize','oversize','flash','dimension'],bef:['dimension'],rec:['splay','specks','dimension','warp'],dcmp:['splay'],open:['sticking'],ej:['sticking','warp'],take:[]};
+DEF.jetting='เจ็ตติ้ง';DEF.sprue='สปรูติด';
+const defLinks=(ids,lab)=>ids&&ids.length?'<div class="xlink"><span>'+lab+'</span>'+ids.map(d=>'<a href="injection-troubleshooting-th.html#d-'+d+'">'+DEF[d]+'</a>').join('')+'</div>':'';
 
 /* ---------- build static UI ---------- */
 const pb=document.getElementById('phasebar');
@@ -379,7 +402,7 @@ P.forEach((p,i)=>{const d=document.createElement('div');d.style.flex=(p.e-p.s);d
 const ph=document.getElementById('phases');
 P.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.className='phase';b.innerHTML='<span class="n">ขั้นที่ '+(i+1)+' · '+p.s.toFixed(2)+'–'+p.e.toFixed(2)+' s</span><b>'+p.name+'</b><small>'+p.li[0]+'</small>';b.onclick=()=>{setT(p.s+0.01);document.getElementById('sim').scrollIntoView({behavior:'smooth'});};ph.appendChild(b);});
 const mg=document.getElementById('mgrid');
-M.forEach(m=>{const c=document.createElement('div');c.className='mcard';c.innerHTML='<div class="top"><span class="name">'+m.n+'</span><span class="val">'+m.v+'</span></div><span class="kind k-'+m.kind+'">'+kindLab[m.kind]+'</span><dl><dt>วัดที่</dt><dd>'+m.where+'</dd><dt>บอก</dt><dd>'+m.tell+'</dd><dt>เฝ้าดู</dt><dd>'+m.watch+'</dd></dl>';const b=document.createElement('button');b.type='button';b.textContent='ดูจังหวะนี้ → '+m.t.toFixed(2)+' s';b.onclick=()=>{setT(m.t);document.getElementById('sim').scrollIntoView({behavior:'smooth'});};c.appendChild(b);mg.appendChild(c);});
+M.forEach(m=>{const c=document.createElement('div');c.className='mcard';c.id=MID[m.n];c.innerHTML='<div class="top"><span class="name">'+m.n+'</span><span class="val">'+m.v+'</span></div><span class="kind k-'+m.kind+'">'+kindLab[m.kind]+'</span><dl><dt>วัดที่</dt><dd>'+m.where+'</dd><dt>บอก</dt><dd>'+m.tell+'</dd><dt>เฝ้าดู</dt><dd>'+m.watch+'</dd></dl>'+defLinks(MDEF[m.n],'อาการที่เกี่ยวข้อง:');const b=document.createElement('button');b.type='button';b.textContent='ดูจังหวะนี้ → '+m.t.toFixed(2)+' s';b.onclick=()=>{setT(m.t);document.getElementById('sim').scrollIntoView({behavior:'smooth'});};c.appendChild(b);mg.appendChild(c);});
 
 /* gantt */
 const G=[['INJCT',2.0,2.3,'0.300 s','m'],['MAX INJ',2.0,2.5,'0.5 s limit','l'],['PACK',2.3,5.3,'3 s','s'],['COOL',5.3,12.3,'7 s','s'],['RECOV',5.5,12.75,'7.25 s','m'],['CYCLE',0,T,'17.89 s','m']];
@@ -467,7 +490,7 @@ function render(){
  const p=phaseAt(t),idx=P.indexOf(p);
  [...pb.children].forEach((d,i)=>d.classList.toggle('on',i===idx));
  const card=$('phasecard');
- if(card.dataset.k!==p.k){card.dataset.k=p.k;card.innerHTML='<h3>ขั้นที่ '+(idx+1)+' · '+p.name+' <span class="mono">'+p.s.toFixed(2)+'–'+p.e.toFixed(2)+' s</span></h3><ul>'+p.li.map(x=>'<li>'+x+'</li>').join('')+'</ul><div style="display:flex;gap:6px;flex-wrap:wrap">'+p.tags.map(x=>'<span class="tag">'+x+'</span>').join('')+'</div>';}
+ if(card.dataset.k!==p.k){card.dataset.k=p.k;card.innerHTML='<h3>ขั้นที่ '+(idx+1)+' · '+p.name+' <span class="mono">'+p.s.toFixed(2)+'–'+p.e.toFixed(2)+' s</span></h3><ul>'+p.li.map(x=>'<li>'+x+'</li>').join('')+'</ul><div style="display:flex;gap:6px;flex-wrap:wrap">'+p.tags.map(x=>'<span class="tag">'+x+'</span>').join('')+'</div>'+defLinks(PDEF[p.k],'ตำหนิที่มักเกิดจากจังหวะนี้:');}
  charts.forEach(c=>c.draw());
 }
 function setT(t){tNow=Math.min(T,Math.max(0,t));$('t').value=tNow;render();}
@@ -477,6 +500,11 @@ function loop(ts){if(!playing)return;if(last){let n=tNow+(ts-last)/1000*speed;if
 $('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'❚❚ หยุด':'▶ เล่น';last=0;if(playing)requestAnimationFrame(loop);};
 $('slow').onclick=()=>{speed=speed===1?0.5:speed===0.5?0.25:1;$('slow').textContent='ความเร็ว ×'+speed;};
 render();
+/* deep link จากหน้า troubleshooting: #pack, #inj ... ไปยังจังหวะ, #m-xxx ไปยังการ์ด monitor */
+function fromHash(){const h=location.hash.slice(1);const p=P.find(x=>x.k===h);
+ if(p){setT(p.s+0.01);document.getElementById('sim').scrollIntoView();return;}
+ const mm=M.find(x=>MID[x.n]===h);if(mm){setT(mm.t);const el=document.getElementById(h);if(el)el.scrollIntoView({block:'center'});}}
+window.addEventListener('hashchange',fromHash);fromHash();
 
 /* ---------- quiz ---------- */
 const Q=[

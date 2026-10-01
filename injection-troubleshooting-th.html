@@ -9,178 +9,168 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <meta name="apple-mobile-web-app-title" content="PE แก้ปัญหางานฉีด">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#15181C">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f2f3f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121618" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Bai+Jamjuree:wght@600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#15181C;
-    --panel:#1E232A;
-    --panel-2:#252B33;
-    --line:#333B45;
-    --ink:#E9ECEF;
-    --muted:#98A2AD;
-    --amber:#FFC233;
-    --steel:#7FB0E8;
-    --moss:#8FCB92;
-    --rust:#E2694A;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;padding:0}
-  body{
-    background:var(--bg);
-    color:var(--ink);
-    font-family:'IBM Plex Sans Thai',system-ui,sans-serif;
-    font-weight:400;
-    line-height:1.62;
-    -webkit-font-smoothing:antialiased;
-  }
-  .wrap{max-width:760px;margin:0 auto;padding:0 18px 72px}
+/* Layout: single reading column (max 820px), sticky search bar, expandable defect cards. Tokens shared with injection-cycle.html */
+:root{
+  --bg:#f2f3f1; --surface:#ffffff; --ink:#1c2226; --muted:#5b666c; --line:#d6dbd8;
+  --steel:#45555e; --steel-2:#9aa8b0; --steel-3:#e3e8ea;
+  --melt:#d0651c; --melt-soft:#f6dcc8;
+  --blue:#2c6aa6; --blue-soft:#dde9f5; --good:#2d7a4c; --good-soft:#dcefe3; --bad:#b0362c; --bad-soft:#f6dedb; --warn:#9a6a08; --warn-soft:#f6ebcf;
+  --display:"Bai Jamjuree","IBM Plex Sans Thai",system-ui,sans-serif;
+  --body:"IBM Plex Sans Thai",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121618; --surface:#1a2023; --ink:#e6ebe8; --muted:#9ba7ac; --line:#2b3438;
+  --steel:#a7b6bd; --steel-2:#5e6e76; --steel-3:#252e32;
+  --melt:#e6803a; --melt-soft:#3d2616;
+  --blue:#6aa3dc; --blue-soft:#18293a; --good:#5fb683; --good-soft:#16291e; --bad:#e2766b; --bad-soft:#341a17; --warn:#d9a640; --warn-soft:#2f2612; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121618; --surface:#1a2023; --ink:#e6ebe8; --muted:#9ba7ac; --line:#2b3438;
+  --steel:#a7b6bd; --steel-2:#5e6e76; --steel-3:#252e32;
+  --melt:#e6803a; --melt-soft:#3d2616;
+  --blue:#6aa3dc; --blue-soft:#18293a; --good:#5fb683; --good-soft:#16291e; --bad:#e2766b; --bad-soft:#341a17; --warn:#d9a640; --warn-soft:#2f2612; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:820px;margin:0 auto;padding-inline:16px;padding-block:0 72px}
+a{color:var(--blue)}
 
-  /* ---- head ---- */
-  header{padding:34px 0 22px;border-bottom:1px solid var(--line)}
-  h1{
-    font-size:31px;line-height:1.25;font-weight:600;margin:0 0 6px;
-    letter-spacing:-.01em;
-  }
-  .sub{color:var(--muted);font-size:15px;font-weight:300;margin:0;max-width:52ch}
+/* ---- shared site nav ---- */
+nav.site{max-width:1080px;margin:0 auto;padding:14px 16px 0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px}
+nav.site .brand{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:10px}
+nav.site a{color:var(--muted);text-decoration:none;padding:5px 12px;border-radius:6px;border:1px solid transparent}
+nav.site a:hover{color:var(--ink);border-color:var(--line)}
+nav.site a[aria-current="page"]{color:var(--ink);background:var(--surface);border-color:var(--line);font-weight:500}
 
-  /* ---- search ---- */
-  .finder{position:sticky;top:0;z-index:20;background:var(--bg);padding:14px 0 10px;border-bottom:1px solid var(--line)}
-  .q{
-    width:100%;padding:15px 16px;font-size:17px;font-family:inherit;
-    background:var(--panel);color:var(--ink);
-    border:1px solid var(--line);border-radius:10px;
-  }
-  .q::placeholder{color:#6D7883}
-  .q:focus{outline:2px solid var(--amber);outline-offset:1px;border-color:transparent}
-  .tabs{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-  .tab{
-    font-family:inherit;font-size:14px;padding:7px 13px;border-radius:999px;cursor:pointer;
-    background:transparent;color:var(--muted);border:1px solid var(--line);
-  }
-  .tab[aria-pressed="true"]{background:var(--amber);color:#15181C;border-color:var(--amber);font-weight:500}
-  .tab:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+/* ---- head ---- */
+header{padding:30px 0 22px;display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-size:clamp(28px,5vw,40px);line-height:1.2;font-weight:700;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);font-size:16px;margin:0;max-width:60ch}
 
-  /* ---- rules card ---- */
-  .rules{
-    margin:22px 0 26px;padding:18px 20px;background:var(--panel);
-    border-left:3px solid var(--amber);border-radius:0 10px 10px 0;
-  }
-  .rules h2{font-size:16px;font-weight:600;margin:0 0 10px}
-  .rules ol{margin:0;padding-left:20px;font-size:15px;color:#CFD6DD}
-  .rules li{margin-bottom:5px}
-  .rules li:last-child{margin-bottom:0}
+/* ---- view switch ---- */
+nav.views{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+nav.views button{flex:1;font-family:inherit;font-size:15px;padding:11px 8px;cursor:pointer;background:transparent;color:var(--muted);border:none}
+nav.views button+button{border-left:1px solid var(--line)}
+nav.views button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:500}
+nav.views button:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+.view[hidden]{display:none}
 
-  /* ---- defect list ---- */
-  .grouphead{
-    font-size:13px;color:var(--muted);font-weight:500;
-    margin:30px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line);
-  }
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
-  .card summary{
-    list-style:none;cursor:pointer;padding:16px 18px;display:flex;align-items:baseline;gap:12px;
-  }
-  .card summary::-webkit-details-marker{display:none}
-  .card summary:focus-visible{outline:2px solid var(--amber);outline-offset:-2px}
-  .nameth{font-size:18px;font-weight:600}
-  .nameen{font-size:13px;color:var(--muted);font-weight:300}
-  .chev{margin-left:auto;color:var(--muted);font-size:13px;transition:transform .18s ease}
-  .card[open] .chev{transform:rotate(90deg)}
-  .card[open]{border-color:#46505C}
-  .body{padding:0 18px 18px}
-  .cause{
-    font-size:14.5px;color:#BCC5CE;background:var(--panel-2);
-    padding:11px 14px;border-radius:8px;margin:0 0 16px;
-  }
+/* ---- search ---- */
+.finder{position:sticky;top:0;z-index:20;background:var(--bg);padding:14px 0 10px;border-bottom:1px solid var(--line)}
+.q{width:100%;padding:13px 15px;font-size:17px;font-family:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px}
+.q::placeholder{color:var(--muted)}
+.q:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:transparent}
+.tabs{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.tab{font-family:inherit;font-size:14px;padding:5px 12px;border-radius:6px;cursor:pointer;background:var(--surface);color:var(--muted);border:1px solid var(--line)}
+.tab:hover{color:var(--ink);border-color:var(--steel-2)}
+.tab[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:500}
+.tab:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 
-  ol.steps{list-style:none;margin:0;padding:0;counter-reset:s}
-  ol.steps li{
-    display:grid;grid-template-columns:30px 1fr;gap:12px;
-    padding:10px 0;border-top:1px solid #2C333B;
-  }
-  ol.steps li:first-child{border-top:none}
-  .num{
-    font-size:19px;font-weight:600;color:var(--amber);
-    font-variant-numeric:tabular-nums;line-height:1.35;
-  }
-  .act{font-size:15.5px}
-  .dir{font-weight:700;padding:0 2px}
-  .up{color:var(--moss)}
-  .down{color:var(--steel)}
-  .bal{color:var(--amber)}
-  .why{display:block;font-size:13.5px;color:var(--muted);font-weight:300;margin-top:1px}
-  .tierflag{
-    display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:4px;
-    margin-right:6px;vertical-align:1px;font-weight:500;
-  }
-  .t-set{background:rgba(255,194,51,.14);color:var(--amber)}
-  .t-mold{background:rgba(127,176,232,.14);color:var(--steel)}
-  .t-mat{background:rgba(143,203,146,.14);color:var(--moss)}
+/* ---- rules card ---- */
+.rules{margin:22px 0 26px;padding:6px 0 6px 18px;border-left:4px solid var(--melt);border-radius:0}
+.rules h2{font-family:var(--display);font-size:18px;font-weight:600;margin:0 0 8px}
+.rules ol{margin:0;padding-left:20px;font-size:15px}
+.rules li{margin-bottom:5px}
+.rules li:last-child{margin-bottom:0}
 
-  .empty{padding:40px 4px;color:var(--muted);font-size:16px}
-  footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);color:#6D7883;font-size:13px;font-weight:300}
+/* ---- defect list ---- */
+.grouphead{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:30px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;margin-bottom:8px;overflow:hidden;scroll-margin-top:140px}
+.card summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.card summary::-webkit-details-marker{display:none}
+.card summary:hover{background:var(--steel-3)}
+.card summary:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+.nameth{font-family:var(--display);font-size:18px;font-weight:600}
+.nameen{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.chev{margin-left:auto;color:var(--muted);font-size:14px;transition:transform .18s ease}
+.card[open] .chev{transform:rotate(90deg)}
+.card[open]{border-color:var(--steel-2)}
+.card:target{outline:2px solid var(--melt);outline-offset:1px}
+.body{padding:0 16px 16px}
+.cause{font-size:15px;color:var(--ink);background:var(--steel-3);padding:10px 14px;border-radius:6px;margin:0 0 14px}
 
-  /* ---- top nav ---- */
-  nav.views{display:flex;gap:0;margin:18px 0 0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-  nav.views button{
-    flex:1;font-family:inherit;font-size:15px;padding:12px 8px;cursor:pointer;
-    background:transparent;color:var(--muted);border:none;
-  }
-  nav.views button[aria-pressed="true"]{background:var(--panel-2);color:var(--ink);font-weight:600}
-  nav.views button:focus-visible{outline:2px solid var(--amber);outline-offset:-2px}
-  .view[hidden]{display:none}
+ol.steps{list-style:none;margin:0;padding:0}
+ol.steps li{display:grid;grid-template-columns:28px 1fr;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+ol.steps li:first-child{border-top:none}
+.num{font-family:var(--mono);font-size:16px;font-weight:500;color:var(--melt);font-variant-numeric:tabular-nums;line-height:1.5}
+.act{font-size:15.5px;min-width:0}
+.dir{font-weight:700;padding:0 2px}
+.up{color:var(--good)}
+.down{color:var(--blue)}
+.bal{color:var(--warn)}
+.why{display:block;font-size:14px;color:var(--muted);margin-top:2px}
+.tierflag{display:inline-block;font-family:var(--mono);font-size:11px;padding:1px 7px;border-radius:3px;margin-right:6px;vertical-align:1px;font-weight:500}
+.t-set{background:var(--melt-soft);color:var(--melt)}
+.t-mold{background:var(--blue-soft);color:var(--blue)}
+.t-mat{background:var(--good-soft);color:var(--good)}
+.t-meas{background:var(--warn-soft);color:var(--warn)}
 
-  /* ---- material cards ---- */
-  .mrow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-  .fam{
-    font-size:12px;font-weight:600;padding:2px 9px;border-radius:5px;
-    background:var(--panel-2);color:#BCC5CE;letter-spacing:.02em;
-  }
-  .conf{width:9px;height:9px;border-radius:50%;display:inline-block;margin-left:auto;flex:none}
-  .c-high{background:var(--moss)}
-  .c-mid{background:var(--muted)}
-  .c-none{background:var(--rust)}
-  .spec{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px;margin:0 0 14px}
-  .spec dt{color:var(--muted);font-weight:300}
-  .spec dd{margin:0}
-  .val{font-variant-numeric:tabular-nums}
+/* cross links to cycle page */
+.xlink{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:13px}
+.xlink span{color:var(--muted);margin-right:4px}
+.xlink a{font-family:var(--mono);font-size:12px;text-decoration:none;color:var(--ink);background:var(--steel-3);border:1px solid var(--line);border-radius:4px;padding:2px 8px}
+.xlink a:hover{border-color:var(--steel-2)}
+.xlink a.mon{background:var(--melt-soft);color:var(--melt);border-color:transparent}
 
-  .check{background:var(--panel-2);border-radius:10px;padding:14px;margin-bottom:14px}
-  .check h3{font-size:14px;margin:0 0 10px;font-weight:500;color:#CFD6DD}
-  .inputs{display:flex;gap:10px}
-  .inputs label{flex:1;font-size:13px;color:var(--muted)}
-  .inputs input{
-    width:100%;margin-top:4px;padding:10px 12px;font-size:16px;font-family:inherit;
-    background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;
-    font-variant-numeric:tabular-nums;
-  }
-  .inputs input:focus{outline:2px solid var(--amber);outline-offset:1px;border-color:transparent}
-  .verdict{margin-top:12px;font-size:14.5px;display:none}
-  .verdict.on{display:block}
-  .vline{padding:9px 12px;border-radius:7px;margin-bottom:7px;border-left:3px solid}
-  .v-ok{background:rgba(143,203,146,.10);border-color:var(--moss)}
-  .v-warn{background:rgba(255,194,51,.10);border-color:var(--amber)}
-  .v-bad{background:rgba(226,105,74,.12);border-color:var(--rust)}
-  .vline b{font-weight:600}
-  .vline span{display:block;color:var(--muted);font-size:13.5px;font-weight:300;margin-top:2px}
+.empty{padding:40px 4px;color:var(--muted);font-size:16px}
+footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
 
-  .famnote{font-size:14px;color:#BCC5CE;background:var(--panel-2);padding:12px 14px;border-radius:8px}
-  .famnote b{display:block;font-size:13px;color:var(--amber);font-weight:600;margin-bottom:5px}
-  .famnote ul{margin:0;padding-left:18px}
-  .famnote li{margin-bottom:3px}
-  .note{font-size:13.5px;color:var(--muted);font-weight:300;margin:12px 0 0;padding-top:10px;border-top:1px solid #2C333B}
-  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* ---- material cards ---- */
+.fam{font-family:var(--mono);font-size:11px;font-weight:500;padding:2px 8px;border-radius:3px;background:var(--steel-3);color:var(--muted);letter-spacing:.04em}
+.conf{width:10px;height:10px;border-radius:50%;display:inline-block;margin-left:auto;flex:none}
+.c-high{background:var(--good)}
+.c-mid{background:var(--steel-2)}
+.c-none{background:var(--bad)}
+.spec{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px;margin:0 0 14px}
+.spec dt{color:var(--muted)}
+.spec dd{margin:0;min-width:0}
+.val{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+.check{background:var(--steel-3);border-radius:6px;padding:14px;margin-bottom:14px}
+.check h3{font-size:14px;margin:0 0 10px;font-weight:500}
+.inputs{display:flex;gap:10px;flex-wrap:wrap}
+.inputs label{flex:1;min-width:120px;font-size:13px;color:var(--muted)}
+.inputs input{width:100%;margin-top:4px;padding:9px 12px;font-size:16px;font-family:var(--mono);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;font-variant-numeric:tabular-nums}
+.inputs input:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:transparent}
+.verdict{margin-top:12px;font-size:14.5px;display:none}
+.verdict.on{display:block}
+.vline{padding:9px 12px;border-radius:0 6px 6px 0;margin-bottom:7px;border-left:3px solid}
+.v-ok{background:var(--good-soft);border-color:var(--good)}
+.v-warn{background:var(--warn-soft);border-color:var(--warn)}
+.v-bad{background:var(--bad-soft);border-color:var(--bad)}
+.vline b{font-weight:600}
+.vline span{display:block;color:var(--muted);font-size:13.5px;margin-top:2px}
+
+.famnote{font-size:14.5px;background:var(--steel-3);padding:12px 14px;border-radius:6px}
+.famnote b{display:block;font-size:13px;color:var(--melt);font-weight:600;margin-bottom:5px}
+.famnote ul{margin:0;padding-left:18px}
+.famnote li{margin-bottom:3px}
+.plant{font-size:14.5px;background:var(--blue-soft);padding:12px 14px;border-radius:6px;margin-bottom:14px}
+.plant b{display:block;font-size:13px;color:var(--blue);font-weight:600;margin-bottom:4px}
+.note{font-size:14px;color:var(--muted);margin:12px 0 0;padding-top:10px;border-top:1px solid var(--line)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
+<nav class="site" aria-label="หน้าในชุดนี้">
+  <span class="brand">Injection PE</span>
+  <a href="injection-cycle.html">รอบการฉีด (Cycle)</a>
+  <a href="injection-troubleshooting-th.html" aria-current="page">แก้ปัญหางานฉีด</a>
+</nav>
 <div class="wrap">
 
 <header>
+  <span class="eyebrow">คู่มือหน้าเครื่อง · Troubleshooting</span>
   <h1>เจออาการแบบไหน แก้อะไรก่อน</h1>
-  <p class="sub">คู่มือไล่แก้ปัญหางานฉีดพลาสติก เรียงลำดับจากที่ปรับง่ายและเสี่ยงน้อยที่สุดก่อน แล้วค่อยไปแตะแม่พิมพ์กับวัตถุดิบ</p>
+  <p class="sub">คู่มือไล่แก้ปัญหางานฉีดพลาสติก เรียงลำดับจากที่ปรับง่ายและเสี่ยงน้อยที่สุดก่อน แล้วค่อยไปแตะแม่พิมพ์กับวัตถุดิบ แต่ละอาการมีลิงก์ไปดูจังหวะและค่า monitor ที่เกี่ยวข้องในหน้ารอบการฉีด</p>
 </header>
 
 <nav class="views">
@@ -206,6 +196,8 @@
     <li>เช็กก่อนว่าวัตถุดิบอบครบเวลาหรือยัง และเป็นล็อตใหม่หรือเปล่า หลายอาการหายไปแค่เพราะเรื่องความชื้น</li>
     <li>จดตำแหน่งที่เกิดตำหนิบนชิ้นงาน (ใกล้เกท / ปลายทางไหล / จุดหนา) ตำแหน่งบอกสาเหตุได้มากกว่าค่าที่หน้าจอ</li>
     <li>ถ้าต้องดันค่าเข้าใกล้ลิมิตเครื่องถึงจะได้งาน แปลว่าหน้าต่างกระบวนการแคบเกินไป ให้ไปแก้ที่แม่พิมพ์หรือแบบชิ้นงานแทน</li>
+    <li>ถ้าเป็นปัญหาขนาด ให้ยืนยันการวัดก่อนแตะเครื่อง: เกจ calibrate ล่าสุดเมื่อไร วัดตรงจุดตาม drawing ไหม วัดหลังฉีดนานเท่าไรและที่อุณหภูมิห้องเท่าไร ชิ้นงานผนังบางเปลี่ยนขนาดได้หลายไมครอนจากเรื่องเหล่านี้</li>
+    <li>ดึงค่า monitor ของช็อตเสียมาเทียบกับช็อตดี (MIN CUSH, V-P PRS, PEAK PRS, RECOV TIME) ถ้าค่าแกว่งตามอาการ สาเหตุอยู่ที่กระบวนการหรือเครื่อง ถ้าค่านิ่งแต่ตำหนิเกิดจุดเดิมทุกช็อต ให้สงสัยแม่พิมพ์</li>
   </ol>
 </div>
 
@@ -314,7 +306,19 @@ const D = [
     ["set","เพิ่ม Cylinder Temperature","up",""],
     ["set","ลด Mold Temperature","down",""],
     ["mold","ขยายเกท","up","เกทเล็กทำให้แข็งก่อนอัดเสร็จ"],
-    ["mold","ลด Mold Cooling Time","down",""]]},
+    ["set","ลด Mold Cooling Time","down",""]]},
+
+{g:"machine", th:"ขนาดแกว่ง ไม่นิ่งระหว่างช็อต", en:"Dimensional Variation", key:"dimension ขนาดแกว่ง ไม่นิ่ง variation spec หลุด บางช็อต",
+ cause:"ขนาดออกนอก spec บางช็อตและกระจายไม่คงที่ ต่างจากขนาดเพี้ยนทั้งล็อตแบบสม่ำเสมอ (ซึ่งให้ไปดูการ์ดใหญ่เกิน/เล็กเกิน) ต้นเหตุมักอยู่ที่ความคงที่ของการวัด เครื่อง หรือวัตถุดิบ มากกว่าที่ค่าตั้ง",
+ s:[["meas","วัดซ้ำด้วยเกจที่ calibrate แล้ว ที่จุดวัดตาม drawing","","ถ้าวัดซ้ำแล้วค่าแกว่งเท่าเดิม ค่อยไปขั้นต่อไป ใช้คนวัดคนเดียวกันและพักชิ้นงานเวลาเท่ากันก่อนวัด"],
+    ["meas","เช็กอุณหภูมิห้องวัดและเวลาหลังฉีด","","ชิ้นงานเล็กผนังบางยังหดตัวต่อหลังปลด วัดเร็วช้าต่างกันได้ค่าต่างกัน"],
+    ["set","ดู MIN CUSH ช็อตต่อช็อต","","แกว่งเกิน ±0.1 mm ในเครื่องไฟฟ้าถือว่าผิดปกติ ปริมาณเนื้อเข้าแม่พิมพ์ไม่เท่ากันทุกช็อต"],
+    ["set","ดู V-P PRS และ INJCT TIME","","แกว่งตามขนาด = ความหนืดของ melt ไม่นิ่ง ไล่ดูความชื้นและอุณหภูมิกระบอก"],
+    ["set","ตั้ง Cooling Time ให้นานกว่า Recovery Time","up","ถ้า recovery นานกว่า เวลาที่ชิ้นงานอยู่ในแม่พิมพ์จะแกว่งตาม recovery"],
+    ["set","ยืนยัน gate freeze ด้วยการชั่งน้ำหนักชิ้นงาน","","ถ้า Hold Time สั้นกว่าเวลา gate freeze ขนาดจะแกว่งตามแรงดันที่ปลายช่วง pack"],
+    ["mat","ตรวจความชื้นและเปลี่ยนล็อตวัตถุดิบ","","เทียบช่วงที่ขนาดเริ่มแกว่งกับเวลาเปลี่ยนล็อตหรือเติมถังอบ"],
+    ["mat","ตรวจแหวนกันกลับ (check ring) และหัวสกรู","","MIN CUSH แกว่งมากทั้งที่ค่าอื่นนิ่ง มักเป็นแหวนกันกลับรั่ว"],
+    ["mold","ตรวจอุณหภูมิน้ำเข้า-ออกแม่พิมพ์และการไหลของ MTC","","ต่างกันเกิน 2–3°C เริ่มมีผลกับงานความแม่นยำสูง"]]},
 
 {g:"part", th:"จุดดำ เส้นน้ำตาล", en:"Black Specks, Brown Streaks", key:"จุดดำ ขี้ดำ เส้นน้ำตาล black specks",
  cause:"เนื้อเก่าไหม้ค้างในกระบอกหรือหัวฉีด หรือมีสิ่งปนเปื้อนในวัตถุดิบ",
@@ -437,6 +441,7 @@ const D = [
     ["set","เพิ่ม Mold Temperature","up",""],
     ["set","ลด Overall Cycle Time","down",""],
     ["set","เพิ่ม Backpressure","up",""],
+    ["set","ลดระยะ Decompression (suck back)","down","ถอยมากหรือเร็วเกินจะดูดอากาศเข้าหน้าสกรู แล้วถูกฉีดเข้าไปเป็นริ้วเงินช็อตถัดไป"],
     ["mold","ขยายเกท","up",""],
     ["mold","ขยายร่องระบายอากาศ","up",""]]},
 
@@ -481,8 +486,27 @@ const D = [
     ["mold","ใช้จิ๊กจับชิ้นงานหลังปลด","","วิธีแก้ปลายทาง ใช้เมื่อแก้ที่ต้นเหตุไม่ได้แล้ว"]]}
 ];
 
-const TIER = {set:["ตั้งค่าเครื่อง","t-set"], mold:["แม่พิมพ์","t-mold"], mat:["วัตถุดิบ/อื่นๆ","t-mat"]};
+const TIER = {set:["ตั้งค่าเครื่อง","t-set"], mold:["แม่พิมพ์","t-mold"], mat:["วัตถุดิบ/อื่นๆ","t-mat"], meas:["การวัด","t-meas"]};
 const ARROW = {up:['↑','up'], down:['↓','down'], bal:['⇕','bal']};
+
+/* id ของแต่ละอาการ (ใช้ทำลิงก์ #d-xxx) และลิงก์ไปหน้า injection-cycle.html */
+const IDS = {"Excessive Flash":"flash","Oversized Part":"oversize","Part Sticking":"sticking","Short Shot":"shortshot","Sprue Sticking":"sprue","Undersized Part":"undersize","Dimensional Variation":"dimension","Black Specks, Brown Streaks":"specks","Blisters":"blister","Brittleness":"brittle","Burn Marks":"burn","Cracking, Crazing":"crack","Delamination":"delam","Discoloration":"discolor","Flow Marks":"flowmark","Jetting":"jetting","Poor Surface Finish (Gloss)":"gloss","Poor Weld Lines":"weld","Silver Streaks, Splay":"splay","Sink Marks":"sink","Voids":"void","Warping":"warp"};
+const PH = {close:"ปิดแม่พิมพ์", inj:"ฉีด (fill)", pack:"V-P / Pack", bef:"BEF EXT", rec:"Cooling + Recovery", dcmp:"Decompression", open:"เปิดแม่พิมพ์", ej:"Ejector"};
+const MON = {"m-vppos":"V-P POS","m-vpprs":"V-P PRS","m-peak":"PEAK PRS","m-mincush":"MIN CUSH","m-extr":"EXTR START","m-injt":"INJCT TIME","m-recov":"RECOV TIME","m-cycle":"CYCLE TIME","m-maxinj":"MAX INJ TIME","m-maxpack":"MAX PACK VEL"};
+const REL = {
+ flash:["pack","m-peak","m-vppos","m-maxpack"], oversize:["pack","m-peak","m-mincush"], sticking:["pack","ej"],
+ shortshot:["inj","m-mincush","m-vpprs","m-injt"], sprue:["close","rec"], undersize:["pack","m-mincush"],
+ dimension:["pack","rec","m-mincush","m-vpprs","m-recov"], specks:["rec","m-cycle"], blister:["rec","dcmp"],
+ brittle:["rec"], burn:["inj","m-injt"], crack:["pack","ej"], delam:["inj"], discolor:["rec","m-cycle"],
+ flowmark:["inj","m-injt"], jetting:["inj"], gloss:["inj","pack"], weld:["inj","m-vpprs"], splay:["rec","dcmp","m-recov"],
+ sink:["pack","m-mincush"], void:["pack","m-mincush"], warp:["rec","ej"]
+};
+function xlinks(id){
+  const r = REL[id]; if(!r) return '';
+  return '<div class="xlink"><span>ดูในหน้ารอบการฉีด:</span>' + r.map(k =>
+    MON[k] ? '<a class="mon" href="injection-cycle.html#' + k + '">' + MON[k] + '</a>'
+           : '<a href="injection-cycle.html#' + k + '">' + PH[k] + '</a>').join('') + '</div>';
+}
 
 function render(filter, query){
   const list = document.getElementById('list');
@@ -501,7 +525,7 @@ function render(filter, query){
       html += '<p class="grouphead">' + (d.g === 'machine' ? 'อาการที่ชี้ไปที่เครื่องและแม่พิมพ์' : 'ตำหนิบนตัวชิ้นงาน') + '</p>';
       lastG = d.g;
     }
-    html += '<details class="card"><summary><span class="nameth">' + d.th +
+    html += '<details class="card" id="d-' + IDS[d.en] + '"><summary><span class="nameth">' + d.th +
       '</span><span class="nameen">' + d.en + '</span><span class="chev">›</span></summary>' +
       '<div class="body"><p class="cause">' + d.cause + '</p><ol class="steps">';
     d.s.forEach((st, i) => {
@@ -514,7 +538,7 @@ function render(filter, query){
         (why ? '<span class="why">' + why + '</span>' : '') +
         '</span></li>';
     });
-    html += '</ol></div></details>';
+    html += '</ol>' + xlinks(IDS[d.en]) + '</div></details>';
   });
   list.innerHTML = html;
 }
@@ -522,9 +546,9 @@ function render(filter, query){
 let curFilter = 'all';
 const qEl = document.getElementById('q');
 qEl.addEventListener('input', () => render(curFilter, qEl.value));
-document.querySelectorAll('.tab').forEach(btn => {
+document.querySelectorAll('.tab[data-f]').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-pressed', b === btn));
+    document.querySelectorAll('.tab[data-f]').forEach(b => b.setAttribute('aria-pressed', b === btn));
     curFilter = btn.dataset.f;
     render(curFilter, qEl.value);
   });
@@ -601,7 +625,8 @@ const M = [
  {f:"PC", g:"GSN-2020DR", b:[280,300], m:[80,120], dry:"120°C 4–8 ชม.", conf:"mid", note:"เทียบจากตระกูลเดียวกัน"},
  {f:"PC", g:"LS-2000", b:null, m:null, dry:"ไม่ทราบ", conf:"none", note:"หาผู้ผลิตและที่มาไม่ได้ ต้องขอ TDS จากซัพพลายเออร์ก่อนตั้งเครื่อง"},
  {f:"PC", g:"PC-GF20 (ทั่วไป)", b:[280,300], m:[80,120], dry:"120°C 4–8 ชม.", conf:"mid", note:"ค่ากลางของ PC เติมใยแก้ว 20% อิงจากมาตรฐาน Mitsubishi"},
- {f:"PC", g:"F4040", b:null, m:null, dry:"ไม่ทราบ", conf:"none", note:"หาที่มาไม่ได้"},
+ {f:"PC", g:"F4040", b:null, m:null, dry:"120°C 4 ชม. (ตามใบ condition B-26)", conf:"none", note:"ยังหาผู้ผลิตและ TDS ไม่ได้ (ในใบ condition เขียนว่า F40-40 สีดำ) ค่าด้านบนเป็นค่าที่ใช้จริงหน้าเครื่อง ไม่ใช่ช่วงจากผู้ผลิต ควรขอ TDS มายืนยัน",
+  plant:"เครื่อง Fanuc B-26 · ชิ้นงาน DI Base Plate (A362305) · Nozzle 295 / B1 300 / B2 290 / B3 280 / Jacket 60 °C · แม่พิมพ์ core 105 / cav 105 °C · อบ 120°C 4 ชม."},
  {f:"PC", g:"EGN-2020DP", b:[280,300], m:[80,120], dry:"120°C 4–8 ชม.", conf:"mid", note:"เทียบจากตระกูล EGN เดียวกัน"},
  {f:"PC", g:"GSH-2030SR", b:[280,300], m:[80,120], dry:"120°C 4–8 ชม.", conf:"mid", note:"เทียบจากตระกูล GSH/EGN เติมใยแก้ว 30%"},
  {f:"PC", g:"EGN2030R2", b:[280,300], m:[80,120], dry:"120°C 4–8 ชม.", conf:"high", note:"จาก TDS ของ Mitsubishi Iupilon โดยตรง"},
@@ -685,6 +710,7 @@ function renderMats(fam, query){
       '<dt>การหดตัว</dt><dd>' + (FAM[x.f] ? FAM[x.f].shrink : '—') + '</dd>' +
       '<dt>เม็ดรีไซเคิล</dt><dd>' + (FAM[x.f] ? FAM[x.f].regrind : '—') + '</dd>' +
       '</dl>' +
+      (x.plant ? '<div class="plant"><b>ค่าที่ใช้จริงหน้าเครื่อง</b>' + esc(x.plant) + ' · <a href="injection-cycle.html">ดูรอบการฉีดของงานนี้</a></div>' : '') +
       '<div class="check"><h3>กรอกค่าที่ตั้งอยู่จริงเพื่อเทียบ</h3><div class="inputs">' +
       '<label>กระบอก °C<input type="number" inputmode="numeric" data-i="' + idx + '" data-k="b"></label>' +
       '<label>แม่พิมพ์ °C<input type="number" inputmode="numeric" data-i="' + idx + '" data-k="m"></label>' +
@@ -744,6 +770,25 @@ document.querySelectorAll('nav.views button').forEach(btn => {
 });
 
 renderMats('all', '');
+
+/* deep link: #d-<id> เปิดการ์ดอาการนั้น, #mats เปิดหน้าวัสดุ */
+function showView(v){
+  document.querySelectorAll('nav.views button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === v));
+  document.getElementById('v-defects').hidden = (v !== 'defects');
+  document.getElementById('v-mats').hidden = (v !== 'mats');
+}
+function openFromHash(){
+  const h = decodeURIComponent(location.hash.slice(1));
+  if(h === 'mats'){ showView('mats'); return; }
+  if(h.indexOf('d-') !== 0) return;
+  showView('defects');
+  document.querySelectorAll('.tab[data-f]').forEach(b => b.setAttribute('aria-pressed', b.dataset.f === 'all'));
+  curFilter = 'all'; qEl.value = ''; render('all','');
+  const el = document.getElementById(h);
+  if(el){ el.open = true; el.scrollIntoView({block:'start'}); }
+}
+window.addEventListener('hashchange', openFromHash);
+openFromHash();
 
 </script>
 </body>
