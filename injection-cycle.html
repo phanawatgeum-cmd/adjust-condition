@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>body{margin:0}</style>
-<title>Injection Cycle B-26</title>
+<title>Injection Cycle Master</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Bai+Jamjuree:wght@600;700&display=swap">
 <style>
@@ -157,45 +157,122 @@ table.kv th{font-weight:500;color:var(--muted);font-size:13px}
 .s-pellet{fill:var(--steel-2)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
-
+<style>
+/* condition editor + results */
+.ed{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.grp{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.grp h3{font-size:15px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.grp h3 small{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:400}
+.fld{display:grid;grid-template-columns:1fr 96px;align-items:center;gap:8px;font-size:14px}
+.fld label{color:var(--ink);line-height:1.3}
+.fld label small{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.fld input{width:100%;font-family:var(--mono);font-size:15px;padding:5px 8px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.fld input:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:transparent}
+.stp{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:4px}
+.stp th{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--muted);text-align:right;padding:2px 4px}
+.stp th:first-child{text-align:left}
+.stp td{padding:3px 4px;vertical-align:top}
+.stp td.sn{font-family:var(--mono);font-size:14px;color:var(--melt);font-weight:500;padding-top:8px;width:36px}
+.stp td input{width:100%;font-family:var(--mono);font-size:15px;padding:5px 8px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.stp td input:focus{outline:2px solid var(--blue);outline-offset:1px;border-color:transparent}
+.stp td small{display:block;text-align:right;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.stp td.changed input{border-color:var(--melt);background:var(--melt-soft)}
+.fld.changed input{border-color:var(--melt);background:var(--melt-soft)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.presets span{font-size:13px;color:var(--muted);margin-right:4px}
+.presets button{font-size:13px;padding:4px 10px}
+.res{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.rc{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.rc span.l{font-size:12.5px;color:var(--muted)}
+.rc b{font-family:var(--mono);font-weight:500;font-size:20px;font-variant-numeric:tabular-nums}
+.rc b small{font-size:12px;color:var(--muted);font-weight:400;margin-left:3px}
+.rc .d{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.rc .d.up{color:var(--melt)} .rc .d.dn{color:var(--blue)}
+.rc.bad{border-color:var(--bad);background:var(--bad-soft)}
+.rc.warn{border-color:var(--warn);background:var(--warn-soft)}
+.warns{display:flex;flex-direction:column;gap:8px}
+.wl{padding:10px 14px;border-left:4px solid;border-radius:0 6px 6px 0;font-size:15px;display:flex;flex-direction:column;gap:4px}
+.wl b{font-weight:600}
+.wl p{font-size:14px;color:var(--ink);max-width:none}
+.wl.bad{border-color:var(--bad);background:var(--bad-soft)}
+.wl.warn{border-color:var(--warn);background:var(--warn-soft)}
+.wl.ok{border-color:var(--good);background:var(--good-soft)}
+.disclaim{font-size:13px;color:var(--muted);max-width:none}
+.mtab{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.mtab th,.mtab td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.mtab th:first-child,.mtab td:first-child{text-align:left}
+.mtab th{font-size:12px;color:var(--muted);font-weight:500}
+.mtab td{font-family:var(--mono)}
+.mtab td.chg{color:var(--melt);font-weight:500}
+.mtab a{color:var(--ink)}
+.zoombar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.zoombar button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.stbar{position:fixed;left:0;right:0;top:0;z-index:50;padding-top:env(safe-area-inset-top,0px);background:var(--bg);border-bottom:1px solid var(--line);transform:translateY(-110%);transition:transform .22s ease;pointer-events:none}
+.stbar.show{transform:none;pointer-events:auto}
+.stin{max-width:1080px;margin:0 auto;padding:8px 16px;display:flex;flex-direction:column;gap:4px}
+.stmeta{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;color:var(--muted)}
+.stmeta span:first-child{color:var(--ink);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+#phasebar2{height:26px}
+@media (prefers-reduced-motion: reduce){.stbar{transition:none}}
+</style>
 <nav class="site" aria-label="หน้าในชุดนี้">
   <span class="brand">Injection PE</span>
   <a href="injection-cycle.html" aria-current="page">รอบการฉีด (Cycle)</a>
   <a href="injection-troubleshooting-th.html">แก้ปัญหางานฉีด</a>
 </nav>
+<div class="stbar" id="stbar" aria-hidden="true">
+  <div class="stin">
+    <div class="phasebar" id="phasebar2" aria-label="จังหวะใน cycle (แถบลอย)"></div>
+    <div class="stmeta"><span id="stname">–</span><span class="mono" id="sttime">t = 0.00 s</span></div>
+  </div>
+</div>
 <div class="wrap">
 <header>
   <span class="eyebrow">สื่อการสอน · Injection Molding Process</span>
   <h1>หนึ่งรอบการฉีด อ่านจากใบ Condition</h1>
-  <p class="lead">ลากแถบเวลาหรือกดเล่น เพื่อดูว่าสกรู แม่พิมพ์ และ ejector ขยับอย่างไรในแต่ละวินาทีของ cycle 17.89 sec พร้อมกราฟและค่า monitor ที่เครื่องวัด ตัวเลขทั้งหมดมาจากใบ Injection Condition Sheet ของเครื่อง B-26</p>
+  <p class="lead">ลองเปลี่ยนค่า condition แล้วดูว่าสกรู แม่พิมพ์ กราฟ และขนาดชิ้นงานเปลี่ยนไปอย่างไร เส้นประในกราฟคือค่าตามใบ condition master เส้นทึบคือค่าที่ปรับ</p>
   <div class="sheet" aria-label="ข้อมูลจากใบ condition">
-    <div><span>Machine</span><b>Fanuc B-26 · 50 ton</b></div>
-    <div><span>Screw dia</span><b>20 mm</b></div>
-    <div><span>Part</span><b>DI Base Plate</b></div>
-    <div><span>Part no.</span><b>A362305</b></div>
-    <div><span>Resin</span><b>PC F40-40 Black</b></div>
+    <div><span>Machine</span><b>Fanuc · 100 ton</b></div>
+    <div><span>Screw dia</span><b>26 mm</b></div>
+    <div><span>Model</span><b>ABC-1234</b></div>
+    <div><span>Part no.</span><b>A1-23456</b></div>
+    <div><span>Resin</span><b>LCP UENO Black</b></div>
     <div><span>Cavity</span><b>1/1</b></div>
-    <div><span>Shot weight</span><b>5.936 g</b></div>
-    <div><span>Cycle</span><b>17.89 s</b></div>
+    <div><span>Shot weight</span><b>7.88 g</b></div>
+    <div><span>Cycle</span><b>19.32 s</b></div>
   </div>
 </header>
 
-<section id="sim">
+<section id="cond">
   <span class="eyebrow">ส่วนที่ 1</span>
+  <h2>ปรับค่า condition</h2>
+  <p>ช่องที่เปลี่ยนจากใบ masterจะเป็นสีส้ม ทุกส่วนด้านล่าง (ผลที่ได้ simulator กราฟ) จะคำนวณใหม่ทันที</p>
+  <div class="presets" id="presets"><span>ลองสถานการณ์:</span></div>
+  <div class="wl warn" id="sheetcheck"><b>ค่าในใบ master ที่ควรตรวจซ้ำ</b><p>Barrel B1 ตั้ง 235°C แต่ B2 310 และ nozzle 325°C ปกติโซนหน้าควรใกล้ nozzle ถ้าตั้ง 235 จริง LCP จะเย็นตัวในโซนหน้า อาจเป็นค่าที่พิมพ์ผิด (เช่น 335) แบบจำลองนี้ใช้อุณหภูมิ nozzle เป็นตัวแทนอุณหภูมิ melt</p></div>
+  <div class="ed" id="editor"></div>
+  <div class="presets"><button type="button" id="reset">คืนค่าตามใบ condition</button></div>
+</section>
+
+<section id="effect">
+  <span class="eyebrow">ส่วนที่ 2</span>
+  <h2>ผลที่ได้</h2>
+  <div class="res" id="results"></div>
+  <div class="warns" id="warns"></div>
+  <p class="disclaim">ตัวเลขมาจากแบบจำลองอย่างง่ายเพื่อการสอน ปรับให้ค่าเริ่มต้นตรงกับค่า monitor ในใบ condition master (สกรู Ø26 ได้ 0.531 cm³/mm, สมมติว่าเติมได้ราว 97% ก่อน V-P, gate freeze ราว 0.5 s และเวลาเย็นตัวที่ต้องการราว 8.5 s ที่แม่พิมพ์ 80°C เป็นค่าประมาณ) ใช้ดูทิศทางและลำดับขนาดของผล ไม่ใช่ค่าที่เครื่องจะวัดได้จริง ก่อนปรับที่เครื่องจริงให้ยืนยันด้วย short shot และ gate freeze study</p>
+</section>
+
+<section id="sim">
+  <span class="eyebrow">ส่วนที่ 3</span>
   <h2>Simulator: เครื่องขยับอย่างไร</h2>
-  <p>สกรูของเครื่องไฟฟ้าแบบ Fanuc มี servo 2 ตัวแยกกัน ตัวหนึ่งดันสกรูเดินหน้าถอยหลัง อีกตัวหมุนสกรู ภาพด้านล่างแสดงทั้งสองแกนพร้อมกับการเปิดปิดแม่พิมพ์ ลวดลายเกลียวสกรูจะเลื่อนเมื่อสกรูหมุน</p>
+  <p>สกรูของเครื่องไฟฟ้าแบบ Fanuc มี servo 2 ตัวแยกกัน ตัวหนึ่งดันสกรูเดินหน้าถอยหลัง อีกตัวหมุนสกรู ภาพด้านล่างแสดงทั้งสองแกนพร้อมกับการเปิดปิดแม่พิมพ์ตามค่าที่ตั้งด้านบน</p>
   <div class="sim">
     <div class="phasebar" id="phasebar" role="tablist" aria-label="จังหวะใน cycle"></div>
     <div class="svgbox">
     <svg id="mach" viewBox="0 0 900 300" role="img" aria-label="ภาพตัดหน่วยฉีดและแม่พิมพ์ แสดงตำแหน่งสกรู เนื้อพลาสติกเหลว และการเปิดปิดแม่พิมพ์ตามเวลา">
-      <defs>
-        <clipPath id="screwClip"><rect id="screwClipRect" x="96" y="123" width="400" height="34"/></clipPath>
-      </defs>
-      <!-- motor -->
+      <defs><clipPath id="screwClip"><rect id="screwClipRect" x="96" y="123" width="400" height="34"/></clipPath></defs>
       <rect x="18" y="98" width="72" height="84" rx="6" class="s-dark"/>
       <text x="54" y="136" text-anchor="middle" class="s-txt" style="fill:var(--bg)">SERVO</text>
       <text x="54" y="152" text-anchor="middle" class="s-txt" style="fill:var(--bg)">inj + rot</text>
-      <!-- hopper -->
       <polygon points="168,30 248,30 222,96 194,96" class="s-steel"/>
       <rect x="194" y="96" width="28" height="16" class="s-steel"/>
       <g id="pellets">
@@ -203,27 +280,20 @@ table.kv th{font-weight:500;color:var(--muted);font-size:13px}
         <circle cx="196" cy="58" r="3" class="s-pellet"/><circle cx="208" cy="62" r="3" class="s-pellet"/><circle cx="220" cy="58" r="3" class="s-pellet"/><circle cx="208" cy="76" r="3" class="s-pellet"/>
       </g>
       <text x="208" y="22" text-anchor="middle" class="s-txt">Hopper</text>
-      <!-- barrel -->
       <rect x="150" y="112" width="490" height="56" rx="3" class="s-steel"/>
-      <!-- heater bands -->
-      <g>
-        <rect x="190" y="104" width="40" height="8" class="s-heat"/><rect x="190" y="168" width="40" height="8" class="s-heat"/>
-        <rect x="300" y="104" width="70" height="8" class="s-heat"/><rect x="300" y="168" width="70" height="8" class="s-heat"/>
-        <rect x="400" y="104" width="70" height="8" class="s-heat"/><rect x="400" y="168" width="70" height="8" class="s-heat"/>
-        <rect x="500" y="104" width="70" height="8" class="s-heat"/><rect x="500" y="168" width="70" height="8" class="s-heat"/>
-        <text x="210" y="192" text-anchor="middle" class="s-txt">Jacket 60°</text>
-        <text x="335" y="192" text-anchor="middle" class="s-txt">B3 280°</text>
-        <text x="435" y="192" text-anchor="middle" class="s-txt">B2 290°</text>
-        <text x="535" y="192" text-anchor="middle" class="s-txt">B1 300°</text>
-        <text x="660" y="192" text-anchor="middle" class="s-txt">N 295°</text>
-      </g>
-      <!-- melt reservoir -->
+      <rect x="190" y="104" width="40" height="8" class="s-heat"/><rect x="190" y="168" width="40" height="8" class="s-heat"/>
+      <rect x="300" y="104" width="70" height="8" class="s-heat"/><rect x="300" y="168" width="70" height="8" class="s-heat"/>
+      <rect x="400" y="104" width="70" height="8" class="s-heat"/><rect x="400" y="168" width="70" height="8" class="s-heat"/>
+      <rect x="500" y="104" width="70" height="8" class="s-heat"/><rect x="500" y="168" width="70" height="8" class="s-heat"/>
+      <text x="210" y="192" text-anchor="middle" class="s-txt">Jacket 60°</text>
+      <text x="335" y="192" text-anchor="middle" class="s-txt">B3 290°</text>
+      <text x="435" y="192" text-anchor="middle" class="s-txt">B2 310°</text>
+      <text x="535" y="192" text-anchor="middle" class="s-txt" >B1 235°</text>
+      <text x="660" y="192" text-anchor="middle" class="s-txt" id="ntxt">N 325°</text>
       <rect id="melt" x="400" y="117" width="225" height="46" class="s-melt" opacity=".9"/>
-      <!-- nozzle -->
       <polygon points="640,122 676,134 676,146 640,158" class="s-steel"/>
-      <rect id="nozzleMelt" x="640" y="137" width="36" height="6" class="s-melt"/>
-      <!-- screw: shaft + body + tip -->
-      <rect id="shaft" x="90" y="134" width="60" height="12" class="s-dark"/>
+      <rect x="640" y="137" width="36" height="6" class="s-melt"/>
+      <rect x="90" y="134" width="60" height="12" class="s-dark"/>
       <g id="screw">
         <rect id="screwBody" x="96" y="123" width="400" height="34" rx="3" style="fill:var(--steel-2)"/>
         <g clip-path="url(#screwClip)"><g id="flights"></g></g>
@@ -231,45 +301,36 @@ table.kv th{font-weight:500;color:var(--muted);font-size:13px}
       </g>
       <text id="checkTxt" x="0" y="214" text-anchor="middle" class="s-txt">check ring</text>
       <line id="checkLine" x1="0" y1="168" x2="0" y2="202" class="s-line" stroke-dasharray="3 3"/>
-      <!-- injection force arrow -->
       <g id="injArrow">
-        <g id="injArrowG">
-          <line x1="96" y1="236" x2="170" y2="236" class="s-arrow"/>
-          <polygon points="170,230 182,236 170,242" class="s-arrow-fill"/>
-        </g>
-        <text x="96" y="262" class="s-txt" style="fill:var(--blue)" id="injArrowTxt">สกรูดันไปข้างหน้า</text>
+        <g id="injArrowG"><line x1="96" y1="236" x2="170" y2="236" class="s-arrow"/><polygon points="170,230 182,236 170,242" class="s-arrow-fill"/></g>
+        <text x="96" y="262" class="s-txt" style="fill:var(--blue)" id="injArrowTxt"></text>
       </g>
-      <!-- rotation indicator -->
       <g id="rotInd">
         <path d="M 40 210 A 16 16 0 1 1 68 210" class="s-arrow"/>
         <polygon points="64,203 72,212 61,214" class="s-arrow-fill"/>
-        <text x="54" y="246" text-anchor="middle" class="s-txt" style="fill:var(--blue)">40 rpm</text>
+        <text x="54" y="246" text-anchor="middle" class="s-txt" style="fill:var(--blue)" id="rpmTxt">40 rpm</text>
       </g>
-
-      <!-- fixed platen + fixed half -->
       <rect x="676" y="38" width="20" height="220" class="s-dark"/>
       <rect x="696" y="64" width="54" height="172" class="s-steel"/>
       <rect id="sprue" x="676" y="137" width="64" height="6" class="s-melt"/>
-      <text x="723" y="276" text-anchor="middle" class="s-txt">Fixed (cav) 105°</text>
-      <!-- moving side group -->
+      <text x="723" y="276" text-anchor="middle" class="s-txt" id="cavTxt">Fixed (cav) 80°</text>
       <g id="moving">
         <rect x="750" y="64" width="54" height="172" class="s-steel"/>
         <rect x="804" y="38" width="20" height="220" class="s-dark"/>
         <rect id="pin1" x="760" y="118" width="44" height="4" style="fill:var(--steel)"/>
         <rect id="pin2" x="760" y="178" width="44" height="4" style="fill:var(--steel)"/>
-        <text x="787" y="276" text-anchor="middle" class="s-txt">Moving (core) 105°</text>
+        <text x="787" y="276" text-anchor="middle" class="s-txt" id="corTxt">Moving (core) 80°</text>
       </g>
-      <!-- part -->
       <rect id="part" x="738" y="112" width="24" height="76" rx="2" class="s-melt"/>
       <rect id="cavOutline" x="738" y="112" width="24" height="76" rx="2" fill="none" stroke="var(--steel-2)" stroke-dasharray="3 2"/>
-      <text id="clampTxt" x="763" y="28" text-anchor="middle" class="s-txt-ink">Clamp 50 ton</text>
+      <text id="clampTxt" x="763" y="28" text-anchor="middle" class="s-txt-ink">Clamp 70 ton</text>
       <text id="moldTxt" x="845" y="150" class="s-txt" text-anchor="start"></text>
     </svg>
     </div>
     <div class="controls">
       <button class="primary" id="play" type="button">▶ เล่น</button>
-      <input type="range" id="t" min="0" max="17.89" step="0.01" value="3.8" aria-label="เวลาใน cycle (วินาที)">
-      <span class="tnow" id="tnow">t = 3.80 s</span>
+      <input type="range" id="t" min="0" max="17.89" step="0.01" value="2.6" aria-label="เวลาใน cycle (วินาที)">
+      <span class="tnow" id="tnow">t = 2.60 s</span>
       <button type="button" id="slow">ความเร็ว ×1</button>
     </div>
     <div class="readout">
@@ -278,250 +339,394 @@ table.kv th{font-weight:500;color:var(--muted);font-size:13px}
       <div class="ro"><span>Pressure</span><b id="r-pr">–</b></div>
       <div class="ro"><span>Screw rpm</span><b id="r-rpm">–</b></div>
       <div class="ro"><span>Mold opening</span><b id="r-mold">–</b></div>
-      <div class="ro"><span>Ejector</span><b id="r-ej">–</b></div>
+      <div class="ro"><span>Cavity fill</span><b id="r-fill">–</b></div>
     </div>
     <div class="phasecard" id="phasecard" aria-live="polite"></div>
   </div>
 </section>
 
-<section>
-  <span class="eyebrow">ส่วนที่ 2</span>
-  <h2>ลำดับจังหวะทั้ง 9 ขั้น</h2>
-  <p>กดที่การ์ดเพื่อกระโดดไปดูจังหวะนั้นใน simulator</p>
-  <div class="phases" id="phases"></div>
-</section>
-
-<section>
-  <span class="eyebrow">ส่วนที่ 3</span>
-  <h2>กราฟ 1 cycle และจุดที่เครื่องวัดค่า monitor</h2>
-  <p>ทุกกราฟใช้แกนเวลาเดียวกัน เส้นตั้งสีส้มคือเวลาปัจจุบันใน simulator คลิกบนกราฟเพื่อเลื่อนเวลาได้ จุดสีส้มคือค่าที่เครื่องจับไว้ แถบด้านล่างคือค่าที่เป็นเวลา</p>
+<section id="charts">
+  <span class="eyebrow">ส่วนที่ 4</span>
+  <h2>กราฟ 1 cycle: ใบ masterเทียบกับค่าที่ปรับ</h2>
+  <p>เส้นประสีเทาคือใบ condition master เส้นทึบสีน้ำเงินคือค่าที่ปรับ เส้นตั้งสีส้มคือเวลาปัจจุบันใน simulator คลิกบนกราฟเพื่อเลื่อนเวลาได้ จุดสีส้มคือค่า monitor ของค่าที่ปรับ</p>
   <div class="sim">
+    <div class="zoombar"><button type="button" id="zoom" aria-pressed="false">ขยายช่วงฉีด + pack</button><span id="zoomhint">ดูทั้ง cycle อยู่ ช่วงฉีดและ pack ของงานนี้สั้นมาก กดเพื่อขยายดู 2 step</span></div>
+    <div class="legend" style="margin-left:0">
+      <span><i class="sw" style="background:var(--blue)"></i>ค่าที่ปรับ</span>
+      <span><i class="sw" style="border:2px dashed var(--steel-2);background:none"></i>ใบ condition master</span>
+      <span><i class="sw" style="background:var(--melt);border-radius:50%"></i>ค่า monitor</span>
+    </div>
     <div class="chartlab">Screw position (mm)</div>
-    <div class="cbox" style="height:190px"><canvas id="c1" role="img" aria-label="กราฟตำแหน่งสกรูตลอด cycle พร้อมจุด V-P POS, MIN CUSH, EXTR START">ตำแหน่งสกรูจาก 28 mm ลงไป 6.51 mm แล้วถอยกลับไป 28 mm</canvas></div>
+    <div class="cbox" style="height:190px"><canvas id="c1" role="img" aria-label="กราฟตำแหน่งสกรูเทียบใบ masterกับค่าที่ปรับ">ตำแหน่งสกรูตลอด cycle</canvas></div>
     <div class="chartlab">Screw velocity (mm/s) · บวก = เดินหน้า, ลบ = ถอยหลัง</div>
-    <div class="cbox" style="height:190px"><canvas id="c4" role="img" aria-label="กราฟความเร็วสกรูตลอด cycle: ฉีด 50 mm/s, pack ไม่เกิน 30 mm/s, recovery ถอยราว 2.2 mm/s, decompression ถอย 13 mm/s">ความเร็วสกรู ฉีด 50 mm/s แล้วลดลงช่วง pack ถอยช้าช่วง recovery และถอยเร็วช่วง decompression</canvas></div>
+    <div class="cbox" style="height:190px"><canvas id="c4" role="img" aria-label="กราฟความเร็วสกรูเทียบใบ masterกับค่าที่ปรับ">ความเร็วสกรูตลอด cycle</canvas></div>
     <div class="chartlab">Pressure (kgf/cm²)</div>
-    <div class="cbox" style="height:190px"><canvas id="c2" role="img" aria-label="กราฟแรงดันตลอด cycle พร้อมจุด V-P PRS และ PEAK PRS">แรงดันขึ้นถึง 658 ที่ V-P แล้ว 800 ช่วง pack</canvas></div>
+    <div class="cbox" style="height:190px"><canvas id="c2" role="img" aria-label="กราฟแรงดันเทียบใบ masterกับค่าที่ปรับ">แรงดันตลอด cycle</canvas></div>
     <div class="chartlab">Mold opening (mm, 0 = ปิดสนิท)</div>
-    <div class="cbox" style="height:130px"><canvas id="c3" role="img" aria-label="กราฟการเปิดปิดแม่พิมพ์ตลอด cycle">แม่พิมพ์ปิดช่วง 1.7 ถึง 13 วินาที</canvas></div>
-    <div class="chartlab">Timer monitor</div>
+    <div class="cbox" style="height:130px"><canvas id="c3" role="img" aria-label="กราฟการเปิดปิดแม่พิมพ์เทียบใบ masterกับค่าที่ปรับ">การเปิดปิดแม่พิมพ์</canvas></div>
+    <div class="chartlab">Timer monitor (ค่าที่ปรับ)</div>
     <div class="timers" id="gantt"></div>
     <div class="legend">
-      <span><i class="sw" style="background:var(--melt);border-radius:50%"></i>ค่า monitor (จุดวัด)</span>
-      <span><i class="sw" style="background:var(--blue)"></i>เวลาที่วัดได้จริง</span>
+      <span><i class="sw" style="background:var(--blue)"></i>เวลาที่วัดได้</span>
       <span><i class="sw" style="background:var(--steel-3);border:1px solid var(--steel-2)"></i>เวลาที่ตั้งไว้</span>
-      <span><i class="sw" style="border:1px dashed var(--muted)"></i>Limit (ไม่ใช่ค่าวัด)</span>
+      <span><i class="sw" style="border:1px dashed var(--muted)"></i>Limit</span>
     </div>
   </div>
 </section>
 
 <section>
-  <span class="eyebrow">ส่วนที่ 4</span>
-  <h2>ค่า monitor แต่ละตัววัดตรงไหน</h2>
-  <p>ค่าบนหน้า monitor มี 3 ประเภท คือค่าที่วัด ณ จุดเดียว ค่าที่เป็นช่วงเวลา และค่า limit ที่เป็นเพดานป้องกัน กดปุ่มในการ์ดเพื่อดูจังหวะที่ค่านั้นเกิดขึ้น</p>
-  <div class="mgrid" id="mgrid"></div>
-</section>
-
-<section>
   <span class="eyebrow">ส่วนที่ 5</span>
-  <h2>ข้อสังเกตจากใบ condition นี้</h2>
-  <div class="notes">
-    <div class="note"><h3>V-P POS ไม่ตรงค่าที่ตั้ง</h3><p>ตั้ง POS TRANSF ไว้ 14 mm แต่ monitor อ่านได้ 16.00 mm ควรเช็คว่าตั้งเงื่อนไข V-P อื่น (pressure หรือ time) ไว้ด้วยหรือไม่ หรือค่า monitor มาจากคนละ trial กับค่าที่ตั้ง</p></div>
-    <div class="note"><h3>Recovery นานกว่า Cooling</h3><p>RECOV TIME 7.25 s มากกว่า COOL TIME 7 s แม่พิมพ์จึงต้องรอ recovery เสร็จก่อนเปิด ถ้า recovery แกว่ง เวลาที่ชิ้นงานอยู่ในแม่พิมพ์และ dimension จะแกว่งตาม ควรให้ cooling มากกว่า recovery อย่างน้อย 0.5 ถึง 1 s</p></div>
-    <div class="note"><h3>สัดส่วนการเติมก่อน V-P</h3><p>สกรู Ø20 ได้ราว 0.314 cm³ ต่อ mm ช่วงก่อนสลับ V-P เติมเนื้อได้ราว 60% ของ shot ส่วนที่เหลือเข้าช่วง pack ซึ่งต่างจากหลักทั่วไปที่ 95 ถึง 98% ควรยืนยันด้วย short shot study</p></div>
-  </div>
+  <h2>ลำดับจังหวะทั้ง 10 ขั้น</h2>
+  <p>เวลาของแต่ละขั้นเปลี่ยนตามค่าที่ตั้ง กดที่การ์ดเพื่อกระโดดไปดูจังหวะนั้นใน simulator</p>
+  <div class="phases" id="phases"></div>
 </section>
 
-<section>
-  <span class="eyebrow">ส่วนที่ 6</span>
-  <h2>แบบทดสอบท้ายบท</h2>
-  <div class="quiz" id="quiz"></div>
-  <div class="score" id="score">คะแนน 0 / 7</div>
-</section>
+
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-const T=17.89;
-const D={
- screw:[[0,28],[2.0,28],[2.3,16],[2.6,9.5],[3.2,7.3],[5.3,6.51],[5.5,8.82],[12.75,25],[13.0,28],[T,28]],
- pres:[[0,0],[2.0,0],[2.15,320],[2.3,658],[2.35,800],[5.3,800],[5.32,160],[5.5,160],[5.52,60],[12.75,60],[12.8,0],[T,0]],
- rpm:[[0,0],[5.5,0],[5.55,40],[12.75,40],[12.8,0],[T,0]],
- mold:[[0,211],[1.0,85],[1.7,0],[13.0,0],[13.3,30],[14.3,160],[14.8,211],[T,211]],
- ej:[[0,0],[15.6,0],[15.9,8],[16.0,5],[16.1,0],[16.3,8],[16.4,5],[16.5,0],[T,0]],
- vel:[[0,0],[2.0,0],[2.03,50],[2.3,50],[2.31,30],[2.45,26],[2.6,15],[3.2,3.7],[3.5,1.0],[5.3,0],[5.31,-11.5],[5.5,-11.5],[5.52,-2.23],[12.75,-2.23],[12.76,-13],[12.98,-13],[13.0,0],[T,0]]
+/* =========================================================
+   แบบจำลองอย่างง่าย ปรับให้ค่าเริ่มต้นตรงกับค่า monitor ในใบ condition master
+   ========================================================= */
+/* ใบ condition master: ABC-1234 / A1-23456 / LCP UENO black · Fanuc 100 ton · screw Ø26 */
+const BASE={shot:18,dcmp:5,dcmpVel:5,injVel1:155,injPos1:10,injVel2:135,vp:6.3,maxInjT:0.2,maxP:1600,
+ pack1:500,packT1:0.2,pack2:300,packT2:0.35,bef:100,befT:0.2,maxPV:20,cool:12,rpm:100,bp:50,tMelt:325,tMold:80,ejDelay:0};
+/* ค่า monitor ในใบ master ที่ใช้ปรับแบบจำลอง */
+const MON0={peak:1276,cush:5.11,vpPos:6.30,vpPrs:1276,extr:7.35,injT:0.14,recov:1.28,cycle:19.32};
+const SCREW_D=2.6;                                 /* cm */
+const AREA=Math.PI*Math.pow(SCREW_D/2,2)/10;       /* cm³ ต่อ mm ของสกรู Ø26 ≈ 0.531 */
+const SHOT_W=7.88;                                 /* shot weight จากใบ (part 5.31 + runner 2.57) */
+const FVP0=0.97;                                   /* สมมติว่าใบ master เติม ~97% ก่อน V-P (V-P PRS = PEAK) */
+const SFULL=(BASE.shot-BASE.vp)/FVP0;             /* ระยะสกรูที่เติมเต็มโพรง ≈ 12.1 mm */
+let COMP0=BASE.shot-SFULL-MON0.cush;               /* เนื้อที่ pack ชดเชยการหดตัว ≈ 0.8 mm (ปรับละเอียดด้านล่าง) */
+const REC0=(BASE.shot-MON0.extr)/MON0.recov;       /* ความเร็วถอยช่วง recovery ≈ 8.3 mm/s */
+const RB0=MON0.extr-MON0.cush;                     /* ระยะเด้งกลับหลัง pack ≈ 2.24 mm */
+const FULL_OPEN=252, T_CLOSE=2.0, T_OPEN=1.8, T_EJ=0.8;
+let T_TAKE=0, RAW0=1;                                      /* คำนวณจาก CYCLE TIME ของใบ master ด้านล่าง */
+
+/* เส้นทางสกรูช่วงฉีด 2 step: คืนรายการ [ตำแหน่งเริ่ม, ตำแหน่งจบ, ความเร็ว] */
+function injSegs(c){const start=c.shot+c.dcmp,vp=Math.min(c.vp,start);const sw=Math.min(Math.max(c.injPos1,vp),start);const s=[];
+ if(start>sw)s.push([start,sw,c.injVel1]);if(sw>vp)s.push([sw,vp,c.injVel2]);return s;}
+const rawFill=c=>injSegs(c).reduce((a,g)=>a+(g[0]-g[1])/g[2],0);
+const TINJK=MON0.injT/rawFill(BASE);              /* ปรับเวลาฉีดให้ตรง INJCT TIME (รวมช่วงเร่ง) */
+const TFILL0=rawFill(BASE);
+function packEff(c,tgf){const T=c.packT1+c.packT2,tg=Math.min(T,tgf);if(tg<=0)return 0;
+ return (c.pack1*Math.min(c.packT1,tg)+c.pack2*Math.max(0,Math.min(c.packT2,tg-c.packT1)))/tg;}
+const gateFreeze=c=>0.5*(1+0.015*(c.tMold-80))*(1+0.005*(c.tMelt-325));
+const PEFF0=packEff(BASE,gateFreeze(BASE));
+
+const META={
+ shot:['Shot size','SHOT SIZE','mm',1,5,40], dcmp:['Decompression distance','DCMP DIST','mm',0.5,0,10], dcmpVel:['Decompression speed','DCMP VEL','mm/s',1,1,50],
+ injVel1:['Step 1 speed','INJCT 1','mm/s',5,5,300], injPos1:['Step 1 → 2 at','INJCT 1','mm',0.5,0,40], injVel2:['Step 2 speed','INJCT 2','mm/s',5,5,300], vp:['V-P position','POS TRANSF','mm',0.1,0.5,30],
+ maxInjT:['Max injection time','MAX INJ TIME','s',0.05,0.05,3], maxP:['Max injection pressure','MAX INJ PRES','kgf/cm²',50,100,2500],
+ pack1:['Step 1 pressure','PACK 1','kgf/cm²',50,0,2000], packT1:['Step 1 time','PACK 1','s',0.05,0,10], pack2:['Step 2 pressure','PACK 2','kgf/cm²',50,0,2000], packT2:['Step 2 time','PACK 2','s',0.05,0,10],
+ bef:['Before-extrude pressure','BEF EXT','kgf/cm²',10,0,500], maxPV:['Max pack velocity','MAX PACK VEL','mm/s',5,2,100],
+ cool:['Cooling time','COOL TIME','s',0.5,1,40], rpm:['Screw speed','EXTRD rpm','rpm',5,10,250], bp:['Back pressure','EXTRD','kgf/cm²',10,0,300],
+ tMelt:['Nozzle temp','N','°C',5,290,360], tMold:['Mold temp (core/cav)','M1 / M3','°C',5,40,160]
 };
-function lerp(a,t){if(t<=a[0][0])return a[0][1];for(let i=1;i<a.length;i++){if(t<=a[i][0]){const[x0,y0]=a[i-1],[x1,y1]=a[i];return x1===x0?y1:y0+(y1-y0)*(t-x0)/(x1-x0);}}return a[a.length-1][1];}
-
-const P=[
- {k:'close',s:0,e:2.0,c:'--blue-soft',name:'Mold close + clamp',short:'Close',
-  li:['ปิดเร็ว 150 mm/s จาก 211 mm เพื่อลด cycle time','เข้าโซน Mold Protect ที่ 85 mm ชะลอเป็น 120 mm/s ถ้าแรงต้านเกิน 6% เครื่องหยุดทันที กัน core pin เล็กหัก','หน้าแม่พิมพ์แตะกันที่ TOUCH 54.84 mm แล้วเพิ่มแรงล็อคเป็น 50 ton','Sprue brake OFF: nozzle แนบ sprue bushing ตลอด อุณหภูมิปลาย nozzle คงที่'],tags:['CLOSE 4 step','PRTCT 85 mm','TOUCH 54.84','MOLD PROTECT 6%']},
- {k:'inj',s:2.0,e:2.3,c:'--bad-soft',name:'Injection (fill)',short:'Inj',
-  li:['สกรูไม่หมุน เดินหน้าเหมือนลูกสูบ check ring ปิดกันเนื้อไหลย้อน','คุมด้วยความเร็ว 50 mm/s แรงดันขึ้นเองตามความต้านทานของการไหล','จับเวลาเป็น INJCT TIME = 0.300 s (limit 0.5 s) แรงดันเพดาน 1300'],tags:['50 mm/s','ACCEL A','MAX INJ PRES 1300','MAX INJ TIME 0.5 s']},
- {k:'pack',s:2.3,e:5.3,c:'--warn-soft',name:'V-P switch → Pack / Hold',short:'Pack',
-  li:['ที่ตำแหน่ง V-P เครื่องเปลี่ยนจากคุมความเร็วเป็นคุมแรงดัน (monitor V-P POS 16.00, V-P PRS 658)','Pack 800 kgf/cm² นาน 3 s สกรูยังคืบช้าๆ เติมเนื้อชดเชยการหดตัว จน gate freeze','ความเร็วสกรูช่วงนี้ไม่เกิน MAX PACK VEL 30 mm/s','จุดที่สกรูเดินไปไกลสุดคือ MIN CUSH 6.51 mm'],tags:['POS TRANSF 14','PACK 800 × 3 s','MAX PACK VEL 30']},
- {k:'bef',s:5.3,e:5.5,c:'--warn-soft',name:'BEF EXT (ก่อน recovery)',short:'',
-  li:['ลดแรงดันเหลือ 160 kgf/cm² นาน 0.2 s เพื่อปลดแรงดันแบบนุ่มนวล','melt คลายตัว ดันสกรูถอยจาก 6.51 ไป 8.82 mm = EXTR START'],tags:['160 × 0.2 s']},
- {k:'rec',s:5.5,e:12.75,c:'--good-soft',name:'Cooling + Recovery (พร้อมกัน)',short:'Cooling + recovery',
-  li:['Cooling timer 7 s นับหลังจบ pack แม่พิมพ์ปิดนิ่ง น้ำจาก MTC 105°C ดึงความร้อน','พร้อมกันนั้นสกรูหมุน 40 rpm ลำเลียงเม็ดจาก hopper ไปหลอมด้วย heater และ shear','melt สะสมหน้าหัวสกรู ดันสกรูถอยไปถึง shot size 25 mm โดยมี back pressure 60 ต้าน ให้ melt แน่นและสม่ำเสมอ','RECOV TIME 7.25 s นานกว่า cooling จึงเป็นตัวกำหนดจังหวะเปิดแม่พิมพ์'],tags:['COOL 7 s','40 rpm','BP 60','SHOT 25 mm']},
- {k:'dcmp',s:12.75,e:13.0,c:'--good-soft',name:'Decompression (suck back)',short:'',
-  li:['สกรูถอยเพิ่ม 3 mm (25 → 28) ที่ 13 mm/s โดยไม่หมุน','ลดแรงดันใน melt กันพลาสติกยืดย้อยออกจาก nozzle (drool)'],tags:['DCMP 3 mm','13 mm/s']},
- {k:'open',s:13.0,e:14.8,c:'--blue-soft',name:'Mold open',short:'Open',
-  li:['เปิดได้เมื่อทั้ง cooling และ recovery+decompression เสร็จ','Breakaway ช้าก่อน กันชิ้นงานผนังบางถูกดึงเสียรูป แล้วเปิดเร็ว และชะลอ 60 mm/s ก่อนถึงเปิดสุด'],tags:['OPEN 4 step','FULL OPEN 211']},
- {k:'ej',s:14.8,e:16.5,c:'--steel-3',name:'Ejector',short:'Eject',
-  li:['EJCT START = Full open แล้วรอ DELAY 0.8 s','ดัน 2 จังหวะ: FWD 8 mm @30 mm/s แล้ว ADV MID 5 mm @15 mm/s ถอดชิ้นงานบางออกจาก core ช้าๆ','REV กลับ 0 mm @150 mm/s ทำซ้ำ COUNT 2 ครั้ง (2ST-B)'],tags:['DELAY 0.8 s','FWD 8 mm','COUNT 2']},
- {k:'take',s:16.5,e:T,c:'--steel-3',name:'Take-out → รอบใหม่',short:'',
-  li:['หยิบชิ้นงานและ runner ออก แล้วเริ่มปิดแม่พิมพ์รอบถัดไป','CYCLE TIME วัดจากปิดแม่พิมพ์ถึงปิดแม่พิมพ์รอบถัดไป = 17.89 s'],tags:['CYCLE 17.89 s']}
+const KEYS=Object.keys(META);
+const GROUPS=[
+ {g:'Injection (ฉีด) 2 step',tag:'INJCT',table:{cols:['Step','mm/s','ถึง mm'],rows:[['1','injVel1','injPos1'],['2','injVel2','vp']]},f:['shot','dcmp','dcmpVel','maxInjT','maxP']},
+ {g:'Pack / Hold 2 step',tag:'PACK',table:{cols:['Step','kgf/cm²','sec'],rows:[['1','pack1','packT1'],['2','pack2','packT2']]},f:['bef','maxPV']},
+ {g:'Cooling + Recovery',tag:'EXTRD',f:['cool','rpm','bp']},
+ {g:'Temperature',tag:'TEMP',f:['tMelt','tMold']}
 ];
-function phaseAt(t){for(const p of P){if(t<p.e)return p;}return P[P.length-1];}
+const PRESETS=[
+ ['Shot size น้อยไป (14 mm)',{shot:14}],
+ ['ตัด pack step 2',{packT2:0}],
+ ['Pack pressure ต่ำ (300/200)',{pack1:300,pack2:200}],
+ ['V-P เร็วไป (9 mm)',{vp:9}],
+ ['V-P เลยจุดเต็ม (4 mm)',{vp:4}],
+ ['ฉีด step 1 ช้าลง (80)',{injVel1:80}],
+ ['Cooling สั้น (6 s)',{cool:6}],
+ ['Nozzle เย็นลง (305°C)',{tMelt:305}],
+ ['แม่พิมพ์ร้อนขึ้น (100°C)',{tMold:100}]
+];
 
-const M=[
- {n:'V-P POS',v:'16.00 mm',kind:'point',t:2.3,where:'ตำแหน่งสกรู ณ วินาทีที่สลับจากฉีดไป pack',tell:'สลับตรงตำแหน่งที่ตั้งหรือไม่',watch:'<span class="flag">ตั้ง 14 แต่อ่านได้ 16 ต้องเช็คเงื่อนไข V-P</span>'},
- {n:'V-P PRS',v:'658 kgf/cm²',kind:'point',t:2.3,where:'แรงดันฉีด ณ วินาทีที่สลับ V-P',tell:'ความต้านทานการไหล ชี้ความหนืดของ melt',watch:'แกว่งตาม lot วัสดุ ความชื้น อุณหภูมิ barrel vent ตัน'},
- {n:'PEAK PRS',v:'800 kgf/cm²',kind:'point',t:3.8,where:'แรงดันสูงสุดตลอดช่วงฉีดและ pack',tell:'เท่ากับ pack 800 แปลว่าไม่มี spike ตอน V-P',watch:'เกิน 800 แปลว่ามี spike เสี่ยง flash และ dimension โต'},
- {n:'MIN CUSH',v:'6.51 mm',kind:'point',t:5.3,where:'ตำแหน่งที่สกรูเดินไปไกลสุด ช่วงปลาย pack',tell:'ยังเหลือเนื้อให้ส่งแรงดัน pack หรือไม่ 0 = bottom out',watch:'แกว่งมาก สงสัย check ring สึกหรือ recovery ไม่คงที่'},
- {n:'EXTR START',v:'8.82 mm',kind:'point',t:5.5,where:'ตำแหน่งสกรูตอนเริ่มหมุน recovery',tell:'ระยะเด้งกลับหลังปลดแรงดัน (6.51 → 8.82)',watch:'แกว่ง ดูความแน่นของ melt และ gate freeze'},
- {n:'INJCT TIME',v:'0.300 s',kind:'time',t:2.15,where:'เริ่มฉีด → สลับ V-P',tell:'ใช้เวลาเติมโพรงเท่าไร',watch:'ยาวขึ้น = melt หนืดขึ้น หรือสกรูวิ่งไม่ถึงความเร็วที่ตั้ง'},
- {n:'RECOV TIME',v:'7.25 s',kind:'time',t:9.0,where:'เริ่มหมุนสกรู → ถอยถึง shot size',tell:'ความเสถียรของการหลอม',watch:'<span class="flag">นานกว่า cooling 7 s จึงคุมจังหวะเปิดแม่พิมพ์</span>'},
- {n:'CYCLE TIME',v:'17.89 s',kind:'time',t:0.5,where:'ปิดแม่พิมพ์ → ปิดแม่พิมพ์รอบถัดไป',tell:'เวลาทั้งรอบ',watch:'แกว่ง ให้หาว่าช่วงไหนยืด มักเป็น recovery หรือ take-out'},
- {n:'MAX INJ TIME',v:'0.5 s',kind:'limit',t:2.2,where:'ทำงานช่วงฉีด',tell:'ฉีดเกิน 0.5 s เกิด alarm หรือบังคับสลับ V-P',watch:'ใช้จริง 0.3 s ยังมี margin'},
- {n:'MAX PACK VEL',v:'30 mm/s',kind:'limit',t:2.45,where:'ทำงานช่วงต้น pack',tell:'จำกัดความเร็วสกรูตอนแรงดันกระโดดขึ้น 800',watch:'กันสกรูพุ่งอัดเนื้อจน flash หรือ overpack'}
+function model(c){
+ const W=[];
+ const start=c.shot+c.dcmp, packT=c.packT1+c.packT2;
+ const visc=Math.exp(-0.03*(c.tMelt-325))*Math.exp(-0.003*(c.tMold-80));
+ const vfac=Math.pow(c.injVel2/BASE.injVel2,0.4);
+ const tgf=gateFreeze(c);
+ /* --- fill (2 step) --- */
+ let segs=injSegs(c), vpPos=Math.min(c.vp,start), vpByTime=false;
+ let tInj=rawFill(c)*TINJK;
+ if(tInj>c.maxInjT){vpByTime=true;let left=c.maxInjT/TINJK,p=start;const ns=[];
+  for(const g of segs){const dt=(g[0]-g[1])/g[2];if(left>=dt){ns.push(g);left-=dt;p=g[1];}else{p=g[0]-left*g[2];ns.push([g[0],p,g[2]]);left=0;break;}}
+  segs=ns;vpPos=p;tInj=c.maxInjT;}
+ const delivered=Math.max(0,start-vpPos-c.dcmp);
+ let fvp=delivered/SFULL;
+ const frz=1+0.6*Math.max(0,rawFill(c)/TFILL0-1);       /* ฉีดช้า ผิวแข็งตัวหนาขึ้น ต้องใช้แรงดันมากขึ้น */
+ const pFull=MON0.vpPrs/FVP0*visc*vfac*frz;              /* แรงดันที่ต้องใช้ตอนเต็มโพรง */
+ let pvp=pFull*Math.min(fvp,1), overfill=false, pLimited=false;
+ if(fvp>1){overfill=true;pvp=pFull+(fvp-1)*SFULL*600;}
+ if(pvp>c.maxP){pLimited=true;pvp=c.maxP;}
+ if(overfill){vpPos=start-c.dcmp-SFULL-Math.min((fvp-1)*SFULL,COMP0*pvp/BASE.pack1*1.3);fvp=Math.min(fvp,1+((start-c.dcmp-vpPos)-SFULL)/SFULL);}
+ /* --- pack (2 step) --- */
+ const packRatio=packT<=0?0:Math.min(packT,tgf)/tgf;
+ const pEff=packEff(c,tgf);
+ const pNeed=0.3*pFull*(1+(1-Math.min(fvp,1))*8);  /* ยิ่งค้างไว้ให้ pack เติมมาก ยิ่งต้องใช้แรงดันมาก */                                  /* แรงดัน pack ขั้นต่ำที่ดันเนื้อส่วนที่เหลือจนเต็มได้ */
+ let fillReach=Math.min(1,fvp);
+ if(fvp<1){fillReach=fvp+(1-fvp)*Math.min(1,c.pack1/pNeed)*Math.min(1,packT/0.25);}
+ const short=fillReach<0.985;
+ let comp=short?0:COMP0*(pEff/PEFF0)*Math.pow(packRatio,0.7);
+ let target=start-c.dcmp-SFULL*fillReach-comp, bottom=false;
+ if(target<0.2){bottom=true;const avail=Math.max(0,start-c.dcmp-0.2);fillReach=Math.min(fillReach,avail/SFULL);comp=Math.max(0,avail-SFULL*fillReach);target=0.2;}
+ const short2=fillReach<0.985;
+ const tau=Math.max(Math.max(0,vpPos-target)/c.maxPV,0.1*BASE.pack1/Math.max(50,c.pack1));
+ const posPack=dt=>target+(vpPos-target)*Math.exp(-dt/tau);
+ const cush=packT>0?posPack(packT):vpPos;
+ const peak=Math.max(pvp,packT>0?Math.max(c.packT1>0?c.pack1:0,c.packT2>0?c.pack2:0):0);
+ /* --- recovery --- */
+ const lastP=c.packT2>0?c.pack2:(c.packT1>0?c.pack1:0), lastP0=BASE.pack2;
+ const extr=Math.min(cush+(packT>0?RB0*(lastP/lastP0):1.0),c.shot-0.5);
+ const rate=REC0*(c.rpm/BASE.rpm)*Math.max(0.3,1-0.004*(c.bp-BASE.bp));
+ const tRec=Math.max(0.2,(c.shot-extr)/rate);
+ /* --- timing --- */
+ const tVP=T_CLOSE+tInj, tP1=tVP+c.packT1, tPE=tVP+packT, tBE=tPE+c.befT, tRE=tBE+tRec, tDC=tRE+(c.dcmp>0?c.dcmp/c.dcmpVel:0);
+ const tCE=tPE+c.cool, tOp=Math.max(tCE,tDC), tOE=tOp+T_OPEN, tEj=tOE+c.ejDelay, tEE=tEj+T_EJ, T=tEE+T_TAKE;
+ const recLimits=tDC>tCE+0.005;
+ const inMold=tOp-tPE;
+ const tReq=8.5*(1+0.015*(c.tMold-80)+0.004*(c.tMelt-325));
+ /* --- shrink / weight --- */
+ let shrink=0.30-0.02*(pEff-PEFF0)/100+0.08*(1-packRatio)+0.01*(c.tMold-80)/10;
+ if(inMold<tReq)shrink+=0.06*(tReq-inMold)/tReq;
+ if(short2)shrink+=0.15*(1-fillReach)*10;
+ if(!short2&&cush<1.5)shrink+=0.08*(1-cush/1.5);
+ const raw=SFULL*fillReach+comp, shotW=SHOT_W*raw/RAW0;
+ /* --- curves --- */
+ const pos=[],vel=[],pr=[];
+ const tb=[];let tt=T_CLOSE;for(const g of segs){const dt=(g[0]-g[1])/g[2]*TINJK;tb.push([tt,tt+dt,g]);tt+=dt;}
+ const N=Math.ceil(T/0.005);
+ for(let i=0;i<=N;i++){const t=Math.min(T,i*0.005);let p,v,q;
+  if(t<T_CLOSE){p=start;v=0;q=0;}
+  else if(t<tVP){p=vpPos;v=0;for(const b of tb){if(t<b[1]){const k=(t-b[0])/(b[1]-b[0]);p=b[2][0]-(b[2][0]-b[2][1])*k;v=b[2][2];break;}}
+   q=pvp*Math.pow(Math.max(0,(start-p-c.dcmp))/Math.max(0.01,start-vpPos-c.dcmp),1.3);if(!(q>=0))q=0;}
+  else if(t<tPE){const dt=t-tVP;p=posPack(dt);v=(vpPos-target)/tau*Math.exp(-dt/tau);q=t<tP1?c.pack1:c.pack2;}
+  else if(t<tBE){const k=(t-tPE)/c.befT;p=cush+(extr-cush)*k;v=-(extr-cush)/c.befT;q=c.bef;}
+  else if(t<tRE){p=extr+(c.shot-extr)*(t-tBE)/tRec;v=-(c.shot-extr)/tRec;q=c.bp;}
+  else if(t<tDC){p=c.shot+c.dcmp*(t-tRE)/(tDC-tRE);v=-c.dcmpVel;q=0;}
+  else {p=start;v=0;q=0;}
+  pos.push([t,p]);vel.push([t,v]);pr.push([t,q]);}
+ const mold=[[0,FULL_OPEN],[0.9,85],[1.7,0],[tOp,0],[tOp+0.3,30],[tOp+1.3,200],[tOE,FULL_OPEN],[T,FULL_OPEN]];
+ const ej=[[0,0],[tEj,0],[tEj+0.5,40],[tEj+0.6,35],[tEj+0.75,20],[tEj+0.8,0],[T,0]];
+ const rpmA=[[0,0],[tBE,0],[tBE+0.05,c.rpm],[tRE,c.rpm],[tRE+0.05,0],[T,0]];
+ /* --- warnings --- */
+ if(short2)W.push(['bad','ฉีดไม่เต็ม (short shot)',bottom?'สกรูเดินจนชนก้นก่อนเนื้อจะเต็มโพรง เพราะ shot size ไม่พอ ต้องเพิ่ม shot size ให้เหลือ cushion อย่างน้อยราว 3–5 mm':'สลับ V-P เร็วเกินไป แรงดันหรือเวลา pack ไม่พอจะดันเนื้อส่วนที่เหลือเข้าจนเต็ม LCP แข็งตัวเร็วมาก ส่วนที่ค้างไว้ให้ pack เติมจึงไปไม่ถึง ทางแก้คือเลื่อน V-P ให้เต็มราว 95–98% ก่อนสลับ',['shortshot']]);
+ else if(bottom||cush<1)W.push(['bad','Cushion หมด (สกรูชนก้น)','MIN CUSH '+cush.toFixed(2)+' mm ไม่เหลือเนื้อให้ส่งแรงดัน pack ชิ้นงานจะยุบ ขนาดเล็กและแกว่ง เพิ่ม shot size ให้ cushion กลับมาราว 3–6 mm',['sink','undersize']]);
+ else if(cush<3)W.push(['warn','Cushion น้อย','MIN CUSH '+cush.toFixed(2)+' mm เหลือน้อย ถ้าเนื้อเข้าต่างกันนิดเดียวระหว่างช็อตอาจชนก้นได้',['sink','dimension']]);
+ else if(cush>10)W.push(['warn','Cushion มากเกินไป','MIN CUSH '+cush.toFixed(2)+' mm เนื้อค้างหน้าสกรูมาก อยู่ในกระบอกนานขึ้นเสี่ยงเสื่อมและจุดดำ ลด shot size ลงได้',['discolor','specks']]);
+ if(overfill)W.push(['bad','V-P สลับหลังโพรงเต็ม','สกรูยังวิ่งด้วยความเร็วตอนเนื้อเต็มโพรงแล้ว แรงดันพุ่งเป็น spike (V-P PRS '+pvp.toFixed(0)+') LCP หนืดต่ำ เกิดครีบง่ายมาก และเสี่ยงแม่พิมพ์เสียหาย',['flash','oversize']]);
+ if(pLimited)W.push(['bad','ชนเพดาน MAX INJ PRES','แรงดันที่ต้องใช้เกิน '+c.maxP+' เครื่องจึงฉีดไม่ได้ตามความเร็วที่ตั้ง',['shortshot']]);
+ if(vpByTime)W.push(['warn','สลับ V-P ด้วยเวลา (MAX INJ TIME)','ฉีดไม่ถึงตำแหน่ง V-P ภายใน '+c.maxInjT+' s เครื่องจึงสลับที่ '+vpPos.toFixed(2)+' mm แทน ตำแหน่งสลับจะแกว่งตามความหนืด',['shortshot','dimension']]);
+ if(c.injPos1<=c.vp&&c.injPos1!==BASE.injPos1)W.push(['warn','ไม่ได้ใช้ step 2 ของการฉีด','ตำแหน่งเปลี่ยน step (ถึง '+c.injPos1+' mm) อยู่เลย V-P แล้ว สกรูจึงฉีดด้วยความเร็ว step 1 จนถึง V-P',[]]);
+ if(packT>0&&packT<tgf)W.push(['warn','Pack time สั้นกว่า gate freeze','gate ยังไม่แข็ง (≈'+tgf.toFixed(2)+' s) ตอนปลดแรงดัน เนื้อไหลย้อนออกจากโพรงได้ ขนาดเล็กลงและแกว่ง',['sink','undersize','dimension']]);
+ if(packT>tgf+1.5)W.push(['warn','Pack time นานเกิน gate freeze มาก','หลัง gate แข็งแล้ว pack ต่อไม่ช่วยอะไร เสีย cycle time เปล่าๆ',[]]);
+ if(Math.max(c.pack1,c.pack2)>1000)W.push(['warn','Pack pressure สูง','LCP หนืดต่ำ อัดแน่นเกินเสี่ยงครีบ ขนาดโต และชิ้นงานติดแม่พิมพ์',['flash','oversize','sticking']]);
+ if(inMold<tReq)W.push(['bad','เวลาเย็นตัวในแม่พิมพ์ไม่พอ','ชิ้นงานอยู่ในแม่พิมพ์ '+inMold.toFixed(1)+' s แต่ต้องการราว '+tReq.toFixed(1)+' s ชิ้นงานยังร้อนตอนปลด เสี่ยงบิดงอและขนาดเปลี่ยนต่อหลังปลด',['warp','dimension']]);
+ if(recLimits&&c.cool<BASE.cool)W.push(['warn','ลด cooling แล้ว cycle ไม่สั้นลง','แม่พิมพ์ยังต้องรอ recovery และ decompression เสร็จก่อนเปิด การลด cooling time อย่างเดียวจึงไม่ได้ผล',[]]);
+ if(c.rpm>BASE.rpm*1.4)W.push(['warn','Screw rpm สูง','shear สูง melt ร้อนเกินตั้ง ถ้าเป็นเกรดเติมใยแก้ว ใยจะหักสั้นลงและความแข็งแรงลด',['brittle','discolor']]);
+ if(c.dcmp>BASE.dcmp+2)W.push(['warn','Decompression มาก','ถอยมากจะดูดอากาศเข้าหน้าสกรู เกิดรอยเสี้ยนเงินและฟอง',['splay','blister']]);
+ if(c.tMelt>350)W.push(['warn','อุณหภูมิ nozzle สูง','LCP เริ่มเสื่อมเมื่อร้อนเกินช่วงใน TDS เสี่ยงจุดดำและสีเพี้ยน',['discolor','specks']]);
+ if(c.tMelt<310)W.push(['warn','อุณหภูมิ nozzle ต่ำ','LCP แข็งตัวเร็วมากเมื่อเย็นลง เสี่ยงฉีดไม่เต็ม รอยประสานอ่อน และ cold slug',['shortshot','weld']]);
+ if(!W.length)W.push(['ok','ไม่มีจุดที่ต้องระวังจากค่าที่ปรับ','',[]]);
+ const s1=segs[0], s2=segs[1];
+ const P=[
+  {k:'close',s:0,e:T_CLOSE,c:'--blue-soft',name:'Mold close + clamp',short:'Close',li:['ปิดจาก '+FULL_OPEN+' mm (CLOSE 5 step) ช่วงแรก 250 mm/s แล้ว 120 mm/s','เข้าโซน Mold Protect ที่ 85 mm (200 mm/s) ถ้าแรงต้านเกิน 6% เครื่องหยุด','หน้าแม่พิมพ์แตะกันที่ TOUCH 54.4 mm (150 mm/s) แล้วล็อคแม่พิมพ์ 70 ton'],tags:['CLOSE 5 step','PRTCT 85 mm','TOUCH 54.4','CLAMP 70 ton']},
+  {k:'inj',s:T_CLOSE,e:tVP,c:'--bad-soft',name:'Injection (fill) 2 step',short:'Inj',li:['สกรูไม่หมุน เดินหน้าเหมือนลูกสูบ check ring ปิดกันเนื้อไหลย้อน',
+    s1?'Step 1: '+s1[2]+' mm/s จาก '+s1[0].toFixed(1)+' ถึง '+s1[1].toFixed(1)+' mm':'ไม่มีช่วง step 1',
+    s2?'Step 2: '+s2[2]+' mm/s จาก '+s2[0].toFixed(1)+' ถึง V-P '+s2[1].toFixed(2)+' mm':'ไม่ได้ใช้ step 2',
+    'ใช้เวลา '+tInj.toFixed(3)+' s ช่วงแรก '+c.dcmp+' mm สกรูอัดช่องว่างจาก decompression ก่อน เติมได้ '+(Math.min(fvp,1)*100).toFixed(0)+'% ก่อนสลับ V-P'],
+    tags:['V1 '+c.injVel1+' → '+c.injPos1+' mm','V2 '+c.injVel2+' → V-P '+c.vp+' mm','MAX INJ TIME '+c.maxInjT+' s']},
+  {k:'pack',s:tVP,e:tPE,c:'--warn-soft',name:'V-P switch → Pack / Hold 2 step',short:'Pack',li:['Step 1: '+c.pack1+' kgf/cm² นาน '+c.packT1+' s','Step 2: '+c.pack2+' kgf/cm² นาน '+c.packT2+' s (ลดแรงดันลงก่อน gate แข็ง ลดความเค้นค้างและครีบ)','สกรูคืบเติมเนื้อและชดเชยการหดตัว ความเร็วไม่เกิน '+c.maxPV+' mm/s · gate freeze ประมาณ '+tgf.toFixed(2)+' s','MIN CUSH = '+cush.toFixed(2)+' mm'],tags:['P1 '+c.pack1+' × '+c.packT1+' s','P2 '+c.pack2+' × '+c.packT2+' s','MAX PACK VEL '+c.maxPV]},
+  {k:'bef',s:tPE,e:tBE,c:'--warn-soft',name:'BEF EXT (ก่อน recovery)',short:'',li:['ลดแรงดันเหลือ '+c.bef+' kgf/cm² นาน '+c.befT+' s','melt คลายตัว สกรูเด้งกลับไปที่ EXTR START '+extr.toFixed(2)+' mm'],tags:[c.bef+' × '+c.befT+' s']},
+  {k:'rec',s:tBE,e:tRE,c:'--good-soft',name:'Recovery (ระหว่าง cooling)',short:'Recov',li:['สกรูหมุน '+c.rpm+' rpm ดึงเม็ดมาหลอม back pressure '+c.bp+' ต้าน สกรูถอยจาก '+extr.toFixed(2)+' ไป '+c.shot+' mm','RECOV TIME = '+tRec.toFixed(2)+' s เสร็จเร็วกว่า cooling มาก','Cooling '+c.cool+' s นับหลังจบ pack แม่พิมพ์ปิดนิ่ง น้ำ '+c.tMold+'°C ดึงความร้อน'],tags:[c.rpm+' rpm','BP '+c.bp,'COOL '+c.cool+' s']},
+  {k:'dcmp',s:tRE,e:tDC,c:'--good-soft',name:'Decompression (suck back)',short:'',li:['สกรูถอยเพิ่ม '+c.dcmp+' mm ('+c.shot+' → '+start.toFixed(1)+') ที่ '+c.dcmpVel+' mm/s โดยไม่หมุน','ลดแรงดันใน melt กัน drool ที่ nozzle'],tags:['DCMP '+c.dcmp+' mm @ '+c.dcmpVel+' mm/s']},
+  {k:'cool',s:tDC,e:tOp,c:'--good-soft',name:'Cooling (รอแม่พิมพ์เย็น)',short:'Cooling',li:['สกรูพร้อมสำหรับช็อตถัดไปแล้ว เหลือรอให้ cooling '+c.cool+' s ครบ','ชิ้นงานอยู่ในแม่พิมพ์หลังจบ pack รวม '+inMold.toFixed(2)+' s'],tags:['COOL '+c.cool+' s']},
+  {k:'open',s:tOp,e:tOE,c:'--blue-soft',name:'Mold open',short:'Open',li:['เปิดที่ '+tOp.toFixed(2)+' s เมื่อ cooling และ recovery เสร็จ','Breakaway 250 mm/s แล้ว 150 → 200 mm/s และชะลอ 100 mm/s ก่อนถึงเปิดสุด '+FULL_OPEN+' mm'],tags:['OPEN 4 step','FULL OPEN '+FULL_OPEN]},
+  {k:'ej',s:tOE,e:tEE,c:'--steel-3',name:'Ejector',short:'Eject',li:['EJCT START = OPEN ดันเมื่อแม่พิมพ์เปิดสุด','FWD 40 mm @ 50 mm/s แล้ว ADV MID 35 mm @ 35 mm/s','REV 20 mm @ 200 mm/s กลับตำแหน่ง'],tags:['FWD 40 mm','ADV MID 35','REV 20']},
+  {k:'take',s:tEE,e:T,c:'--steel-3',name:'Take-out → รอบใหม่',short:'',li:['หยิบชิ้นงานออกแล้วเริ่มปิดแม่พิมพ์รอบถัดไป','CYCLE TIME = '+T.toFixed(2)+' s'],tags:['CYCLE '+T.toFixed(2)+' s']}
+ ];
+ if(tDC>=tOp){P[6].e=P[6].s=tOp;}
+ return {raw,c,start,packT,vpPos,pvp,peak,cush,extr,tInj,tRec,T,tVP,tPE,tBE,tRE,tDC,tCE,tOp,tOE,tEj,tEE,tgf,fvp:Math.min(fvp,1),fillReach,shrink,shotW,inMold,tReq,recLimits,overfill,W,P,
+  D:{screw:pos,vel,pres:pr,mold,ej,rpm:rpmA}};
+}
+
+for(let i=0;i<4;i++)COMP0+=model(BASE).cush-MON0.cush;   /* ให้ MIN CUSH ของใบ master ตรง 5.11 */
+RAW0=model(BASE).raw;                                     /* ให้ shot weight ของใบ master ตรง 7.88 g */
+T_TAKE=Math.max(0.5,MON0.cycle-model(BASE).T);
+/* ---------- state ---------- */
+let cur=Object.assign({},BASE), B=model(BASE), S=model(cur), tNow=2.6;
+function lerp(a,t){if(t<=a[0][0])return a[0][1];let lo=0,hi=a.length-1;if(t>=a[hi][0])return a[hi][1];
+ while(hi-lo>1){const m=(lo+hi)>>1;if(a[m][0]<=t)lo=m;else hi=m;}const[x0,y0]=a[lo],[x1,y1]=a[hi];return x1===x0?y1:y0+(y1-y0)*(t-x0)/(x1-x0);}
+const $=id=>document.getElementById(id);
+
+/* ---------- editor ---------- */
+const ed=$('editor');
+const inp=k=>{const m=META[k];return '<input type="number" id="in-'+k+'" step="'+m[3]+'" min="'+m[4]+'" max="'+m[5]+'" value="'+BASE[k]+'" aria-label="'+m[0]+' ('+m[2]+')">';};
+GROUPS.forEach(g=>{const box=document.createElement('div');box.className='grp';
+ let h='<h3>'+g.g+'<small>'+g.tag+'</small></h3>';
+ if(g.table){h+='<table class="stp"><tr>'+g.table.cols.map(x=>'<th>'+x+'</th>').join('')+'</tr>'+g.table.rows.map(r=>'<tr><td class="sn">'+r[0]+'</td>'+r.slice(1).map(k=>'<td id="fw-'+k+'">'+inp(k)+'<small>master '+BASE[k]+'</small></td>').join('')+'</tr>').join('')+'</table>';}
+ h+=g.f.map(k=>{const m=META[k];return '<div class="fld" id="fw-'+k+'"><label for="in-'+k+'">'+m[0]+'<small>'+m[1]+' · ใบ master '+BASE[k]+' '+m[2]+'</small></label>'+inp(k)+'</div>';}).join('');
+ box.innerHTML=h;ed.appendChild(box);});
+KEYS.forEach(k=>{const m=META[k];$('in-'+k).addEventListener('input',e=>{const v=parseFloat(e.target.value);if(isNaN(v))return;cur[k]=Math.min(m[5],Math.max(m[4],v));recalc();});});
+const pr=$('presets');
+PRESETS.forEach(p=>{const b=document.createElement('button');b.type='button';b.textContent=p[0];b.onclick=()=>{cur=Object.assign({},BASE,p[1]);syncInputs();recalc();};pr.appendChild(b);});
+$('reset').onclick=()=>{cur=Object.assign({},BASE);syncInputs();recalc();};
+function syncInputs(){KEYS.forEach(k=>{$('in-'+k).value=cur[k];});}
+
+/* ---------- results ---------- */
+const fmt=(v,d)=>v.toFixed(d);
+function dlt(a,b,d,unit){const x=a-b;if(Math.abs(x)<Math.pow(10,-d)/2)return '<span class="d">= ใบ master</span>';return '<span class="d '+(x>0?'up':'dn')+'">'+(x>0?'+':'')+x.toFixed(d)+' '+unit+' จากใบ master</span>';}
+function renderResults(){
+ const sizeUm=10000*(B.shrink-S.shrink)/100;
+ const R=[
+  ['Fill ก่อน V-P',fmt(S.fvp*100,0),'%',dlt(S.fvp*100,B.fvp*100,0,'%'),S.fvp>=0.999?'bad':''],
+  ['Fill สุดท้าย',fmt(S.fillReach*100,1),'%',dlt(S.fillReach*100,B.fillReach*100,1,'%'),S.fillReach<0.995?'bad':''],
+  ['MIN CUSH',fmt(S.cush,2),'mm',dlt(S.cush,B.cush,2,'mm'),S.cush<1?'bad':S.cush<3||S.cush>10?'warn':''],
+  ['PEAK PRS',fmt(S.peak,0),'kgf/cm²',dlt(S.peak,B.peak,0,''),S.overfill?'bad':''],
+  ['Shot weight (ประมาณ)',fmt(S.shotW,3),'g',dlt(S.shotW,B.shotW,3,'g'),''],
+  ['ขนาด 10.000 mm เปลี่ยน',(sizeUm>0?'+':'')+fmt(sizeUm,1),'µm','<span class="d">หดตัว ≈ '+S.shrink.toFixed(2)+'% (ใบ master '+B.shrink.toFixed(2)+'%)</span>',Math.abs(sizeUm)>10?'warn':''],
+  ['เวลาในแม่พิมพ์หลัง pack',fmt(S.inMold,2),'s','<span class="d">ต้องการ ≈ '+S.tReq.toFixed(1)+' s</span>',S.inMold<S.tReq?'bad':''],
+  ['CYCLE TIME',fmt(S.T,2),'s',dlt(S.T,B.T,2,'s'),'']
+ ];
+ $('results').innerHTML=R.map(r=>'<div class="rc '+r[4]+'"><span class="l">'+r[0]+'</span><b>'+r[1]+'<small>'+r[2]+'</small></b>'+r[3]+'</div>').join('');
+ $('warns').innerHTML=S.W.map(w=>'<div class="wl '+w[0]+'"><b>'+w[1]+'</b>'+(w[2]?'<p>'+w[2]+'</p>':'')+defLinks(w[3],'ดูวิธีแก้:')+'</div>').join('');
+ KEYS.forEach(k=>$('fw-'+k).classList.toggle('changed',cur[k]!==BASE[k]));
+ $('ntxt').textContent='N '+cur.tMelt+'°';$('cavTxt').textContent='Fixed (cav) '+cur.tMold+'°';$('corTxt').textContent='Moving (core) '+cur.tMold+'°';$('rpmTxt').textContent=cur.rpm+' rpm';
+}
+
+/* ---------- links to troubleshooting ---------- */
+const DEF={shortshot:'ฉีดไม่เต็ม',flash:'ครีบเกิน',oversize:'ใหญ่เกินขนาด',undersize:'เล็กเกินขนาด',dimension:'ขนาดแกว่ง',sink:'รอยยุบ',void:'โพรงในเนื้อ',splay:'รอยเสี้ยนเงิน',specks:'จุดดำ',discolor:'สีเพี้ยน',flowmark:'รอยไหล',burn:'รอยไหม้',weld:'รอยประสาน',warp:'บิดงอ',sticking:'ติดแม่พิมพ์',blister:'ฟองพอง',jetting:'เจ็ตติ้ง',sprue:'สปรูติด',brittle:'ชิ้นงานเปราะ'};
+const defLinks=(ids,lab)=>ids&&ids.length?'<div class="xlink"><span>'+lab+'</span>'+ids.map(d=>'<a href="injection-troubleshooting-th.html#d-'+d+'">'+DEF[d]+'</a>').join('')+'</div>':'';
+const PDEF={cool:['warp','dimension'],close:['sprue','flash'],inj:['shortshot','jetting','burn','flowmark','weld'],pack:['sink','undersize','oversize','flash','dimension'],bef:['dimension'],rec:['splay','specks','dimension','warp'],dcmp:['splay'],open:['sticking'],ej:['sticking','warp'],take:[]};
+
+/* ---------- monitor ---------- */
+const MON=[
+ {id:'m-vppos',n:'V-P POS',u:'mm',d:2,get:m=>m.vpPos,t:m=>m.tVP,kind:'point',where:'ตำแหน่งสกรู ณ วินาทีที่สลับจากฉีดไป pack',tell:'สลับตรงตำแหน่งที่ตั้งหรือไม่ (ในใบ master monitor อ่านได้ 16.00 แต่ตั้ง 14)',def:['shortshot','flash']},
+ {id:'m-vpprs',n:'V-P PRS',u:'kgf/cm²',d:0,get:m=>m.pvp,t:m=>m.tVP,kind:'point',where:'แรงดันฉีด ณ วินาทีที่สลับ V-P',tell:'ความต้านทานการไหล ชี้ความหนืดของ melt และ % fill ตอนสลับ',def:['shortshot','dimension','weld']},
+ {id:'m-peak',n:'PEAK PRS',u:'kgf/cm²',d:0,get:m=>m.peak,t:m=>m.tVP+0.5,kind:'point',where:'แรงดันสูงสุดตลอดช่วงฉีดและ pack',tell:'ถ้าสูงกว่าแรงดัน pack แปลว่ามี spike ตอน V-P',def:['flash','oversize']},
+ {id:'m-mincush',n:'MIN CUSH',u:'mm',d:2,get:m=>m.cush,t:m=>m.tPE-0.01,kind:'point',where:'ตำแหน่งที่สกรูเดินไปไกลสุด ช่วงปลาย pack',tell:'ยังเหลือเนื้อให้ส่งแรงดัน pack หรือไม่ 0 = ชนก้น',def:['sink','shortshot','dimension','void']},
+ {id:'m-extr',n:'EXTR START',u:'mm',d:2,get:m=>m.extr,t:m=>m.tBE,kind:'point',where:'ตำแหน่งสกรูตอนเริ่มหมุน recovery',tell:'ระยะเด้งกลับหลังปลดแรงดัน',def:['dimension']},
+ {id:'m-injt',n:'INJCT TIME',u:'s',d:3,get:m=>m.tInj,t:m=>2+m.tInj/2,kind:'time',where:'เริ่มฉีด → สลับ V-P',tell:'ใช้เวลาเติมโพรงเท่าไร',def:['shortshot','flowmark','burn']},
+ {id:'m-recov',n:'RECOV TIME',u:'s',d:2,get:m=>m.tRec,t:m=>(m.tBE+m.tRE)/2,kind:'time',where:'เริ่มหมุนสกรู → ถอยถึง shot size',tell:'ความเสถียรของการหลอม ถ้านานกว่า cooling จะคุมจังหวะเปิดแม่พิมพ์',def:['dimension','splay']},
+ {id:'m-cycle',n:'CYCLE TIME',u:'s',d:2,get:m=>m.T,t:m=>0.5,kind:'time',where:'ปิดแม่พิมพ์ → ปิดแม่พิมพ์รอบถัดไป',tell:'เวลาทั้งรอบ',def:['specks','discolor']},
+ {id:'m-maxinj',n:'MAX INJ TIME',u:'s',d:2,get:m=>m.c.maxInjT,t:m=>2+m.tInj/2,kind:'limit',where:'ทำงานช่วงฉีด',tell:'ฉีดเกินเวลานี้เครื่องเกิด alarm หรือบังคับสลับ V-P',def:['shortshot']},
+ {id:'m-maxpack',n:'MAX PACK VEL',u:'mm/s',d:0,get:m=>m.c.maxPV,t:m=>m.tVP+0.1,kind:'limit',where:'ทำงานช่วงต้น pack',tell:'จำกัดความเร็วสกรูตอนแรงดันกระโดดขึ้นเป็นแรงดัน pack',def:['flash','oversize']}
 ];
 const kindLab={point:'จุดวัด',time:'เวลา',limit:'limit'};
-/* ลิงก์ไปหน้า injection-troubleshooting-th.html (#d-<id>) */
-const MID={'V-P POS':'m-vppos','V-P PRS':'m-vpprs','PEAK PRS':'m-peak','MIN CUSH':'m-mincush','EXTR START':'m-extr','INJCT TIME':'m-injt','RECOV TIME':'m-recov','CYCLE TIME':'m-cycle','MAX INJ TIME':'m-maxinj','MAX PACK VEL':'m-maxpack'};
-const DEF={shortshot:'ฉีดไม่เต็ม',flash:'ครีบเกิน',oversize:'ใหญ่เกินขนาด',undersize:'เล็กเกินขนาด',dimension:'ขนาดแกว่ง',sink:'รอยยุบ',void:'โพรงในเนื้อ',splay:'รอยเสี้ยนเงิน',specks:'จุดดำ',discolor:'สีเพี้ยน',flowmark:'รอยไหล',burn:'รอยไหม้',weld:'รอยประสาน',warp:'บิดงอ',sticking:'ติดแม่พิมพ์',blister:'ฟองพอง'};
-const MDEF={'V-P POS':['shortshot','flash'],'V-P PRS':['shortshot','dimension','weld'],'PEAK PRS':['flash','oversize'],'MIN CUSH':['sink','shortshot','dimension','void'],'EXTR START':['dimension'],'INJCT TIME':['shortshot','flowmark','burn'],'RECOV TIME':['dimension','splay'],'CYCLE TIME':['specks','discolor'],'MAX INJ TIME':['shortshot'],'MAX PACK VEL':['flash','oversize']};
-const PDEF={close:['sprue','flash'],inj:['shortshot','jetting','burn','flowmark','weld'],pack:['sink','undersize','oversize','flash','dimension'],bef:['dimension'],rec:['splay','specks','dimension','warp'],dcmp:['splay'],open:['sticking'],ej:['sticking','warp'],take:[]};
-DEF.jetting='เจ็ตติ้ง';DEF.sprue='สปรูติด';
-const defLinks=(ids,lab)=>ids&&ids.length?'<div class="xlink"><span>'+lab+'</span>'+ids.map(d=>'<a href="injection-troubleshooting-th.html#d-'+d+'">'+DEF[d]+'</a>').join('')+'</div>':'';
 
-/* ---------- build static UI ---------- */
-const pb=document.getElementById('phasebar');
-P.forEach((p,i)=>{const d=document.createElement('div');d.style.flex=(p.e-p.s);d.style.background='var('+p.c+')';d.textContent=p.short;d.title=p.name;d.dataset.i=i;d.setAttribute('role','tab');d.onclick=()=>setT(p.s+0.01);pb.appendChild(d);});
-const ph=document.getElementById('phases');
-P.forEach((p,i)=>{const b=document.createElement('button');b.type='button';b.className='phase';b.innerHTML='<span class="n">ขั้นที่ '+(i+1)+' · '+p.s.toFixed(2)+'–'+p.e.toFixed(2)+' s</span><b>'+p.name+'</b><small>'+p.li[0]+'</small>';b.onclick=()=>{setT(p.s+0.01);document.getElementById('sim').scrollIntoView({behavior:'smooth'});};ph.appendChild(b);});
-const mg=document.getElementById('mgrid');
-M.forEach(m=>{const c=document.createElement('div');c.className='mcard';c.id=MID[m.n];c.innerHTML='<div class="top"><span class="name">'+m.n+'</span><span class="val">'+m.v+'</span></div><span class="kind k-'+m.kind+'">'+kindLab[m.kind]+'</span><dl><dt>วัดที่</dt><dd>'+m.where+'</dd><dt>บอก</dt><dd>'+m.tell+'</dd><dt>เฝ้าดู</dt><dd>'+m.watch+'</dd></dl>'+defLinks(MDEF[m.n],'อาการที่เกี่ยวข้อง:');const b=document.createElement('button');b.type='button';b.textContent='ดูจังหวะนี้ → '+m.t.toFixed(2)+' s';b.onclick=()=>{setT(m.t);document.getElementById('sim').scrollIntoView({behavior:'smooth'});};c.appendChild(b);mg.appendChild(c);});
+/* ---------- phases ---------- */
+const pb=$('phasebar'),ph=$('phases'),pb2=$('phasebar2');
+function renderPhases(){
+ pb.innerHTML='';ph.innerHTML='';pb2.innerHTML='';
+ S.P.forEach((p,i)=>{const d=document.createElement('div');d.style.flex=Math.max(0.05,p.e-p.s);d.style.background='var('+p.c+')';d.textContent=(p.e-p.s)>1.2?p.short:'';d.title=p.name;d.setAttribute('role','tab');d.onclick=()=>setT(p.s+0.01);pb.appendChild(d);const d2=d.cloneNode(true);d2.removeAttribute('role');d2.onclick=()=>setT(p.s+0.01);pb2.appendChild(d2);
+  const b=document.createElement('button');b.type='button';b.className='phase';b.innerHTML='<span class="n">ขั้นที่ '+(i+1)+' · '+p.s.toFixed(2)+'–'+p.e.toFixed(2)+' s</span><b>'+p.name+'</b><small>'+p.li[0]+'</small>';b.onclick=()=>{setT(p.s+0.01);$('sim').scrollIntoView({behavior:'smooth'});};ph.appendChild(b);});
+ $('phasecard').dataset.k='';
+}
+function phaseAt(t){for(const p of S.P){if(t<p.e)return p;}return S.P[S.P.length-1];}
 
-/* gantt */
-const G=[['INJCT',2.0,2.3,'0.300 s','m'],['MAX INJ',2.0,2.5,'0.5 s limit','l'],['PACK',2.3,5.3,'3 s','s'],['COOL',5.3,12.3,'7 s','s'],['RECOV',5.5,12.75,'7.25 s','m'],['CYCLE',0,T,'17.89 s','m']];
-const gh=document.getElementById('gantt');
-G.forEach(r=>{const L=r[1]/T*100,W=(r[2]-r[1])/T*100;const st=r[4]==='m'?'background:var(--blue)':r[4]==='l'?'border:1px dashed var(--muted)':'background:var(--steel-3);border:1px solid var(--steel-2)';const inside=W>40;const vs=inside?'left:'+(L+1)+'%;padding-left:6px;color:'+(r[4]==='m'?'var(--surface)':'var(--ink)'):'left:calc('+(L+W)+'% + 6px);color:var(--ink)';gh.insertAdjacentHTML('beforeend','<div class="gr"><span class="gl">'+r[0]+'</span><div class="gt"><div class="gb" style="left:'+L+'%;width:'+W+'%;'+st+'"></div><span class="gv" style="'+vs+'">'+r[3]+'</span></div></div>');});
-
-/* flights */
-const fl=document.getElementById('flights');let fh='';for(let i=0;i<40;i++){const x=96+i*18;fh+='<line class="s-flight" x1="'+x+'" y1="123" x2="'+(x+12)+'" y2="157"/>';}fl.innerHTML=fh;
+/* ---------- gantt ---------- */
+function renderGantt(){const T=S.T,c=S.c;
+ const G=[['INJCT',2.0,2.0+S.tInj,S.tInj.toFixed(3)+' s','m'],['MAX INJ',2.0,2.0+c.maxInjT,c.maxInjT+' s limit','l'],['PACK',S.tVP,S.tPE,S.packT.toFixed(2)+' s','s'],['GATE FRZ',S.tVP,S.tVP+S.tgf,'≈'+S.tgf.toFixed(2)+' s (ประมาณ)','l'],['COOL',S.tPE,S.tCE,c.cool+' s','s'],['RECOV',S.tBE,S.tRE,S.tRec.toFixed(2)+' s','m'],['CYCLE',0,T,T.toFixed(2)+' s','m']];
+ $('gantt').innerHTML=G.map(r=>{const L=r[1]/T*100,W=Math.max(0.3,(r[2]-r[1])/T*100);const st=r[4]==='m'?'background:var(--blue)':r[4]==='l'?'border:1px dashed var(--muted)':'background:var(--steel-3);border:1px solid var(--steel-2)';const inside=W>40;const vs=inside?'left:'+(L+1)+'%;padding-left:6px;color:'+(r[4]==='m'?'var(--surface)':'var(--ink)'):'left:calc('+Math.min(L+W,80)+'% + 6px);color:var(--ink)';
+  return '<div class="gr"><span class="gl">'+r[0]+'</span><div class="gt"><div class="gb" style="left:'+L+'%;width:'+W+'%;'+st+'"></div><span class="gv" style="'+vs+'">'+r[3]+'</span></div></div>';}).join('');}
 
 /* ---------- charts ---------- */
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-let tNow=3.8,charts=[];
-const markT=[2.0,2.3,5.3,5.5,13.0,14.8];
-const plug={id:'ann',afterDraw(c){const x=c.scales.x,y=c.scales.y,ctx=c.ctx,o=c.options.plugins.ann||{};ctx.save();
- ctx.setLineDash([3,3]);ctx.strokeStyle=css('--line');ctx.lineWidth=1;markT.forEach(m=>{const p=x.getPixelForValue(m);ctx.beginPath();ctx.moveTo(p,y.top);ctx.lineTo(p,y.bottom);ctx.stroke();});ctx.setLineDash([]);
+let charts={};
+const plug={id:'ann',afterDraw(ch){const x=ch.scales.x,y=ch.scales.y,ctx=ch.ctx,o=ch.options.plugins.ann||{};ctx.save();
+ ctx.setLineDash([3,3]);ctx.strokeStyle=css('--line');ctx.lineWidth=1;(o.marks||[]).forEach(m=>{const p=x.getPixelForValue(m);ctx.beginPath();ctx.moveTo(p,y.top);ctx.lineTo(p,y.bottom);ctx.stroke();});ctx.setLineDash([]);
  (o.lim||[]).forEach(l=>{ctx.setLineDash([4,3]);ctx.strokeStyle=css('--muted');const py=y.getPixelForValue(l.y);ctx.beginPath();ctx.moveTo(x.getPixelForValue(l.x0),py);ctx.lineTo(x.getPixelForValue(l.x1),py);ctx.stroke();ctx.setLineDash([]);ctx.font='11px "IBM Plex Mono",monospace';ctx.fillStyle=css('--muted');ctx.textAlign='left';ctx.fillText(l.t,x.getPixelForValue(l.x1)+6,py+4);});
- (o.txt||[]).forEach(l=>{ctx.font='11px "IBM Plex Sans Thai",sans-serif';ctx.fillStyle=css('--muted');ctx.textAlign='left';ctx.fillText(l.t,x.getPixelForValue(l.x),y.getPixelForValue(l.y));});
  (o.pts||[]).forEach(p=>{const px=x.getPixelForValue(p.x),py=y.getPixelForValue(p.y);ctx.beginPath();ctx.arc(px,py,5,0,7);ctx.fillStyle=css('--melt');ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=css('--surface');ctx.stroke();ctx.font='500 11px "IBM Plex Mono",monospace';ctx.fillStyle=css('--ink');ctx.textAlign=p.a||'left';ctx.fillText(p.t,px+(p.dx||0),py+(p.dy||0));});
- const cx=x.getPixelForValue(tNow);ctx.strokeStyle=css('--melt');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,y.top);ctx.lineTo(cx,y.bottom);ctx.stroke();
- ctx.restore();}};
-const CS=[
- {id:'c1',d:D.screw,max:34,ann:{pts:[{x:2.3,y:16,t:'V-P POS 16.00',dx:9,dy:-6},{x:5.3,y:6.51,t:'MIN CUSH 6.51',a:'right',dx:-9,dy:12},{x:5.5,y:8.82,t:'EXTR START 8.82',dx:9,dy:14},{x:12.75,y:25,t:'SHOT 25',a:'right',dx:-9,dy:-4}],txt:[{x:2.9,y:14,t:'pack: ≤ 30 mm/s'}]}},
- {id:'c4',d:D.vel,min:-20,max:65,ann:{pts:[{x:2.3,y:50,t:'INJ 50 mm/s',dx:9,dy:-4},{x:12.87,y:-13,t:'DCMP −13',a:'right',dx:-9,dy:4}],lim:[{x0:2.3,x1:5.3,y:30,t:'MAX PACK VEL 30 (limit)'}],txt:[{x:6.3,y:-8,t:'recovery: สกรูถอย ≈ 2.2 mm/s (16.18 mm ใน 7.25 s)'},{x:3.3,y:14,t:'pack: ช้าลงจน gate freeze'}]}},
- {id:'c2',d:D.pres,max:1450,ann:{pts:[{x:2.3,y:658,t:'V-P PRS 658',a:'right',dx:-10,dy:-4},{x:3.8,y:800,t:'PEAK PRS 800',a:'center',dy:-11}],lim:[{x0:2.0,x1:2.5,y:1300,t:'MAX INJ PRES 1300'}],txt:[{x:6.3,y:170,t:'back pressure 60'}]}},
- {id:'c3',d:D.mold,max:230,ann:{},last:true}
-];
-function buildCharts(){charts.forEach(c=>c.destroy());charts=[];
- const tick=css('--muted'),grid=css('--line'),line=css('--blue');
- CS.forEach(s=>{const ch=new Chart(document.getElementById(s.id),{type:'line',plugins:[plug],
-  data:{datasets:[{data:s.d.map(p=>({x:p[0],y:p[1]})),borderColor:line,backgroundColor:line+'22',fill:true,borderWidth:2,pointRadius:0,tension:0}]},
-  options:{responsive:true,maintainAspectRatio:false,animation:false,onClick:(e,_,c)=>{setT(c.scales.x.getValueForPixel(e.x));},
-   plugins:{ann:s.ann,legend:{display:false},tooltip:{intersect:false,mode:'index',callbacks:{title:i=>i[0].parsed.x.toFixed(2)+' s',label:c=>c.parsed.y.toFixed(2)}}},
-   scales:{x:{type:'linear',min:0,max:T,display:!!s.last,ticks:{color:tick,stepSize:2,callback:v=>v+' s'},grid:{display:false}},
-           y:{min:s.min||0,max:s.max,afterFit:a=>{a.width=70},ticks:{color:tick,maxTicksLimit:3},grid:{color:grid}}}}});charts.push(ch);});}
-if(window.Chart){buildCharts();}
+ const cx=x.getPixelForValue(tNow);ctx.strokeStyle=css('--melt');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx,y.top);ctx.lineTo(cx,y.bottom);ctx.stroke();ctx.restore();}};
+function chartSpec(){const m=S,c=S.c,marks=[2.0,m.tVP,m.tPE,m.tBE,m.tOp,m.tOE];
+ return {
+  c1:{key:'screw',min:0,max:Math.max(34,c.shot+c.dcmp+4,BASE.shot+BASE.dcmp+4),ann:{marks,pts:[{x:m.tVP,y:m.vpPos,t:'V-P POS '+m.vpPos.toFixed(2),dx:9,dy:-6},{x:m.tPE,y:m.cush,t:'MIN CUSH '+m.cush.toFixed(2),a:'right',dx:-9,dy:12},{x:m.tBE,y:m.extr,t:'EXTR START '+m.extr.toFixed(2),dx:9,dy:14}]}},
+  c4:{key:'vel',min:-20,max:Math.max(180,c.injVel1+25,c.injVel2+25),ann:{marks,pts:[{x:2.0+m.tInj*0.3,y:lerp(m.D.vel,2.0+m.tInj*0.3),t:'V1 '+c.injVel1,dx:10,dy:-6},{x:m.tVP-0.01,y:lerp(m.D.vel,m.tVP-0.01),t:'V2 '+c.injVel2,dx:10,dy:14}],lim:[{x0:m.tVP,x1:m.tPE,y:c.maxPV,t:'MAX PACK VEL '+c.maxPV}]}},
+  c2:{key:'pres',min:0,max:Math.max(1450,c.maxP+150,m.peak+150),ann:{marks,pts:Math.abs(m.peak-m.pvp)<1?[{x:m.tVP,y:m.pvp,t:'V-P PRS = PEAK '+m.pvp.toFixed(0),dx:10,dy:-6}]:[{x:m.tVP,y:m.pvp,t:'V-P PRS '+m.pvp.toFixed(0),a:'right',dx:-10,dy:-4},{x:m.tVP+0.02,y:m.peak,t:'PEAK '+m.peak.toFixed(0),dx:10,dy:-8}],lim:[{x0:2.0,x1:2.0+c.maxInjT,y:c.maxP,t:'MAX INJ PRES '+c.maxP}]}},
+  c3:{key:'mold',min:0,max:280,ann:{marks},last:true}};}
+const toXY=a=>a.map(p=>({x:p[0],y:p[1]}));
+let zoom=false;
+function xRange(){if(!zoom)return [0,Math.max(S.T,B.T),2];const a=1.9,b=Math.max(S.tBE,B.tBE)+0.25;return [a,b,(b-a)>1.5?0.2:0.1];}
+function xTick(v){return zoom?(Math.round(v*10)%1===0?v.toFixed(1)+' s':''):(Number.isInteger(v)?v+' s':'');}
+function buildCharts(){Object.values(charts).forEach(c=>c.destroy());charts={};
+ const tick=css('--muted'),grid=css('--line'),line=css('--blue'),base=css('--steel-2');const sp=chartSpec();const XR=xRange();
+ Object.entries(sp).forEach(([id,s])=>{charts[id]=new Chart($(id),{type:'line',plugins:[plug],
+  data:{datasets:[{data:toXY(B.D[s.key]),borderColor:base,borderDash:[5,4],borderWidth:1.5,pointRadius:0,fill:false,tension:0},{data:toXY(S.D[s.key]),borderColor:line,backgroundColor:line+'22',fill:true,borderWidth:2,pointRadius:0,tension:0}]},
+  options:{responsive:true,maintainAspectRatio:false,animation:false,parsing:false,onClick:(e,_,c)=>setT(c.scales.x.getValueForPixel(e.x)),
+   plugins:{ann:s.ann,legend:{display:false},tooltip:{enabled:false}},
+   scales:{x:{type:'linear',min:XR[0],max:XR[1],display:!!s.last,ticks:{color:tick,stepSize:XR[2],callback:v=>xTick(v)},grid:{display:false}},y:{min:s.min,max:s.max,afterFit:a=>{a.width=70},ticks:{color:tick,maxTicksLimit:4},grid:{color:grid}}}}});});}
+function updateCharts(){if(!window.Chart)return;if(!Object.keys(charts).length){buildCharts();return;}const sp=chartSpec();const XR=xRange();
+ Object.entries(sp).forEach(([id,s])=>{const ch=charts[id];ch.data.datasets[1].data=toXY(S.D[s.key]);ch.options.plugins.ann=s.ann;ch.options.scales.x.min=XR[0];ch.options.scales.x.max=XR[1];ch.options.scales.x.ticks.stepSize=XR[2];ch.options.scales.y.min=s.min;ch.options.scales.y.max=s.max;ch.update('none');});}
 try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(window.Chart)buildCharts();});new MutationObserver(()=>{if(window.Chart)buildCharts();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
 
-/* ---------- simulator render ---------- */
-const $=id=>document.getElementById(id);
-const K=7, TIPMAX=625;
-function rotOffset(t){const a=Math.min(Math.max(t,5.5),12.75)-5.5;return (a*40)%18;}
+/* ---------- simulator ---------- */
+const fl=$('flights');let fh='';for(let i=0;i<40;i++){const x=96+i*18;fh+='<line class="s-flight" x1="'+x+'" y1="123" x2="'+(x+12)+'" y2="157"/>';}fl.innerHTML=fh;
+const K=7,TIPMAX=625;
 function render(){
- const t=tNow,pos=lerp(D.screw,t),pr=lerp(D.pres,t),rpm=lerp(D.rpm,t),mold=lerp(D.mold,t),ej=lerp(D.ej,t);
- const tip=TIPMAX-pos*K;
- const bodyEnd=tip-14;
- $('screwBody').setAttribute('width',bodyEnd-96);
- $('screwClipRect').setAttribute('width',bodyEnd-96);
+ const m=S,c=S.c,t=tNow,pos=lerp(m.D.screw,t),v=lerp(m.D.vel,t),prs=lerp(m.D.pres,t),rpm=lerp(m.D.rpm,t),mold=lerp(m.D.mold,t),ej=lerp(m.D.ej,t);
+ const tip=TIPMAX-Math.min(pos,34)*K,bodyEnd=tip-14;
+ $('screwBody').setAttribute('width',Math.max(10,bodyEnd-96));$('screwClipRect').setAttribute('width',Math.max(10,bodyEnd-96));
  $('tip').setAttribute('points',bodyEnd+',123 '+tip+',140 '+bodyEnd+',157');
- $('flights').setAttribute('transform','translate('+(-rotOffset(t))+',0)');
+ const rot=t<m.tBE?0:(Math.min(t,m.tRE)-m.tBE)*c.rpm%18;
+ $('flights').setAttribute('transform','translate('+(-rot)+',0)');
  $('melt').setAttribute('x',tip);$('melt').setAttribute('width',Math.max(0,640-tip));
  $('checkLine').setAttribute('x1',bodyEnd);$('checkLine').setAttribute('x2',bodyEnd);$('checkTxt').setAttribute('x',bodyEnd);
- const injecting=t>=2.0&&t<5.3, recovering=t>=5.5&&t<12.75, dcmp=t>=12.75&&t<13.0;
+ const injecting=t>=2.0&&t<m.tPE,recovering=t>=m.tBE&&t<m.tRE,dcmp=t>=m.tRE&&t<m.tDC;
  $('injArrow').style.opacity=(injecting||recovering||dcmp)?1:0;
- $('injArrowTxt').textContent=injecting?(t<2.3?'สกรูดันไปข้างหน้า 50 mm/s':'คุมแรงดัน pack 800'):recovering?'สกรูถูก melt ดันถอยหลัง (BP 60)':'ถอย decompression 3 mm';
+ $('injArrowTxt').textContent=injecting?(t<m.tVP?'สกรูดันไปข้างหน้า '+lerp(m.D.vel,t).toFixed(0)+' mm/s':'คุมแรงดัน pack '+(t<m.tVP+c.packT1?c.pack1:c.pack2)):recovering?'สกรูถูก melt ดันถอยหลัง (BP '+c.bp+')':'ถอย decompression '+c.dcmp+' mm';
  $('injArrowG').setAttribute('transform',injecting?'translate(0,0)':'translate(278,0) scale(-1,1)');
  $('rotInd').style.opacity=rpm>1?1:0;
- // pellets fall slightly when rotating
  $('pellets').setAttribute('transform','translate(0,'+(rpm>1?((t*30)%6):0)+')');
- // mold
- const gap=mold/211*60;
- $('moving').setAttribute('transform','translate('+gap+',0)');
- const closed=mold<0.5;
- $('clampTxt').style.opacity=(closed&&t>1.6&&t<13.0)?1:0;
- // fill fraction
- let fill=0;if(t>=2.0&&t<2.3)fill=(t-2.0)/0.3*0.62;else if(t>=2.3&&t<3.2)fill=0.62+(t-2.3)/0.9*0.38;else if(t>=3.2)fill=1;
- const coolF=Math.min(1,Math.max(0,(t-2.3)/10));
- const part=$('part');
- const ejected=t>=16.45||t<2.0;
- const partX=738+gap-ej*2.2;
- part.setAttribute('x',partX);
- part.setAttribute('height',76*fill);part.setAttribute('y',188-76*fill);
- part.style.fill=coolF>0.5?'var(--cold)':'var(--melt)';part.style.opacity=ejected?0:1;
- $('cavOutline').setAttribute('x',738+(t>=13?gap:0));$('cavOutline').style.opacity=(t<2.0||t>=13.0)?.6:0;
- $('sprue').style.opacity=(t>=2.0&&t<13.0)?1:0;$('sprue').style.fill=coolF>0.5?'var(--cold)':'var(--melt)';
- $('pin1').setAttribute('x',760-ej*2.2);$('pin2').setAttribute('x',760-ej*2.2);
+ const gap=mold/FULL_OPEN*60;$('moving').setAttribute('transform','translate('+gap+',0)');
+ const closed=mold<0.5;$('clampTxt').style.opacity=(closed&&t>1.6&&t<m.tOp)?1:0;
+ const fill=t<2.0||t>=m.tEE?0:Math.min(m.fillReach,Math.max(0,(m.start-c.dcmp-pos)/SFULL));
+ const coolF=Math.min(1,Math.max(0,(t-m.tVP)/Math.max(1,c.cool)));
+ const part=$('part');part.setAttribute('x',738+(t>=m.tOp?gap:0)-ej*0.45);part.setAttribute('height',76*fill);part.setAttribute('y',188-76*fill);
+ part.style.fill=coolF>0.5?'var(--cold)':'var(--melt)';part.style.opacity=fill>0?1:0;
+ $('cavOutline').setAttribute('x',738+(t>=m.tOp?gap:0));$('cavOutline').style.opacity=(t<2.0||t>=m.tOp)?.6:0;
+ $('sprue').style.opacity=(t>=2.0&&t<m.tOp)?1:0;$('sprue').style.fill=coolF>0.5?'var(--cold)':'var(--melt)';
+ $('pin1').setAttribute('x',760-ej*0.45);$('pin2').setAttribute('x',760-ej*0.45);
  $('moldTxt').textContent=closed?'':mold.toFixed(0)+' mm';$('moldTxt').setAttribute('x',830+gap);
- // readouts
- $('r-pos').innerHTML=pos.toFixed(2)+'<small>mm</small>';
- $('r-vel').innerHTML=lerp(D.vel,t).toFixed(1)+'<small>mm/s</small>';
- $('r-pr').innerHTML=pr.toFixed(0)+'<small>kgf/cm²</small>';
- $('r-rpm').innerHTML=rpm.toFixed(0)+'<small>rpm</small>';
- $('r-mold').innerHTML=mold.toFixed(0)+'<small>mm</small>';
- $('r-ej').innerHTML=ej.toFixed(1)+'<small>mm</small>';
+ $('r-pos').innerHTML=pos.toFixed(2)+'<small>mm</small>';$('r-vel').innerHTML=v.toFixed(1)+'<small>mm/s</small>';
+ $('r-pr').innerHTML=prs.toFixed(0)+'<small>kgf/cm²</small>';$('r-rpm').innerHTML=rpm.toFixed(0)+'<small>rpm</small>';
+ $('r-mold').innerHTML=mold.toFixed(0)+'<small>mm</small>';$('r-fill').innerHTML=(fill*100).toFixed(0)+'<small>%</small>';
  $('tnow').textContent='t = '+t.toFixed(2)+' s';
- const p=phaseAt(t),idx=P.indexOf(p);
- [...pb.children].forEach((d,i)=>d.classList.toggle('on',i===idx));
+ const p=phaseAt(t),idx=S.P.indexOf(p);[...pb.children].forEach((d,i)=>d.classList.toggle('on',i===idx));[...pb2.children].forEach((d,i)=>d.classList.toggle('on',i===idx));
+ $('stname').textContent=p.name;$('sttime').textContent='t = '+t.toFixed(2)+' / '+S.T.toFixed(2)+' s';
  const card=$('phasecard');
  if(card.dataset.k!==p.k){card.dataset.k=p.k;card.innerHTML='<h3>ขั้นที่ '+(idx+1)+' · '+p.name+' <span class="mono">'+p.s.toFixed(2)+'–'+p.e.toFixed(2)+' s</span></h3><ul>'+p.li.map(x=>'<li>'+x+'</li>').join('')+'</ul><div style="display:flex;gap:6px;flex-wrap:wrap">'+p.tags.map(x=>'<span class="tag">'+x+'</span>').join('')+'</div>'+defLinks(PDEF[p.k],'ตำหนิที่มักเกิดจากจังหวะนี้:');}
- charts.forEach(c=>c.draw());
+ Object.values(charts).forEach(c=>c.draw());
 }
-function setT(t){tNow=Math.min(T,Math.max(0,t));$('t').value=tNow;render();}
+function setT(t){tNow=Math.min(S.T,Math.max(0,t));$('t').value=tNow;render();}
 $('t').addEventListener('input',e=>setT(+e.target.value));
 let playing=false,speed=1,last=0;
-function loop(ts){if(!playing)return;if(last){let n=tNow+(ts-last)/1000*speed;if(n>T)n=0;setT(n);}last=ts;requestAnimationFrame(loop);}
+function loop(ts){if(!playing)return;if(last){let n=tNow+(ts-last)/1000*speed;if(n>S.T)n=0;setT(n);}last=ts;requestAnimationFrame(loop);}
 $('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'❚❚ หยุด':'▶ เล่น';last=0;if(playing)requestAnimationFrame(loop);};
 $('slow').onclick=()=>{speed=speed===1?0.5:speed===0.5?0.25:1;$('slow').textContent='ความเร็ว ×'+speed;};
-render();
-/* deep link จากหน้า troubleshooting: #pack, #inj ... ไปยังจังหวะ, #m-xxx ไปยังการ์ด monitor */
-function fromHash(){const h=location.hash.slice(1);const p=P.find(x=>x.k===h);
- if(p){setT(p.s+0.01);document.getElementById('sim').scrollIntoView();return;}
- const mm=M.find(x=>MID[x.n]===h);if(mm){setT(mm.t);const el=document.getElementById(h);if(el)el.scrollIntoView({block:'center'});}}
+
+$('zoom').onclick=()=>{zoom=!zoom;$('zoom').setAttribute('aria-pressed',zoom);$('zoom').textContent=zoom?'ดูทั้ง cycle':'ขยายช่วงฉีด + pack';
+ $('zoomhint').textContent=zoom?'ขยายช่วง '+xRange()[0].toFixed(1)+'–'+xRange()[1].toFixed(1)+' s เห็น step 1/2 ของการฉีดและ pack ชัดขึ้น':'ดูทั้ง cycle อยู่ ช่วงฉีดและ pack ของงานนี้สั้นมาก กดเพื่อขยายดู 2 step';
+ if(tNow<xRange()[0]||tNow>xRange()[1])setT(S.tVP+0.05);updateCharts();Object.values(charts).forEach(c=>c.draw());};
+function recalc(){S=model(cur);$('t').max=S.T.toFixed(2);if(tNow>S.T)tNow=S.T;renderResults();renderPhases();renderGantt();updateCharts();render();}
+recalc();
+
+/* deep link: #pack, #inj ... ไปยังจังหวะ, #m-xxx ไปยังการ์ด monitor */
+function fromHash(){const h=location.hash.slice(1);const p=S.P.find(x=>x.k===h);
+ if(p){setT(p.s+0.01);$('sim').scrollIntoView();return;}
+ const mm=MON.find(x=>x.id===h);if(mm){setT(mm.t(S));$('charts').scrollIntoView();}}
 window.addEventListener('hashchange',fromHash);fromHash();
 
-/* ---------- quiz ---------- */
-const Q=[
- {q:'ช่วงฉีด (fill) สกรูทำอะไร',o:['หมุนและเดินหน้า','เดินหน้าโดยไม่หมุน เหมือนลูกสูบ','หมุนอยู่กับที่','ถอยหลังพร้อมหมุน'],a:1,ex:'ช่วงฉีดและ pack สกรูไม่หมุน check ring ปิด สกรูดันเนื้อด้านหน้าเข้าแม่พิมพ์'},
- {q:'MIN CUSH 6.51 mm วัดที่จังหวะไหน',o:['ตอนสลับ V-P','ตอนเริ่ม recovery','ตำแหน่งที่สกรูเดินไปไกลสุด ช่วงปลาย pack','ตอนเปิดแม่พิมพ์'],a:2,ex:'Cushion คือเนื้อที่เหลือหน้าสกรูตอนเดินไปไกลสุด ถ้าเป็น 0 แปลว่า bottom out ส่งแรงดัน pack ไม่ได้'},
- {q:'PEAK PRS = 800 เท่ากับแรงดัน pack พอดี หมายความว่าอะไร',o:['ช่วงฉีดไม่มี spike เกินแรงดัน pack','เครื่องแรงดันไม่พอ','V-P สลับช้าเกินไป','แม่พิมพ์ flash'],a:0,ex:'แรงดันสูงสุดเกิดช่วง pack ไม่ใช่ช่วงฉีด ถ้า peak เกิน 800 แปลว่ามี spike ตอนสลับ V-P'},
- {q:'ทำไมแม่พิมพ์ในใบนี้เปิดที่ราว 13.0 s ไม่ใช่ทันทีที่ cooling 7 s ครบ',o:['เพราะ delay ejector','เพราะ recovery 7.25 s นานกว่า cooling เครื่องรอให้ recovery เสร็จ','เพราะ mold protect','เพราะ BEF EXT'],a:1,ex:'เครื่องจะเปิดแม่พิมพ์เมื่อทั้ง cooling และ recovery+decompression เสร็จ recovery จึงคุมจังหวะ'},
- {q:'Back pressure 60 kgf/cm² ทำงานช่วงไหน',o:['ช่วง pack','ช่วงฉีด','ช่วง recovery ขณะสกรูหมุนและถอย','ช่วงเปิดแม่พิมพ์'],a:2,ex:'Back pressure ต้านการถอยของสกรูขณะ recovery ทำให้ melt แน่น ไม่มีฟอง อุณหภูมิสม่ำเสมอ'},
- {q:'MAX PACK VEL 30 mm/s เป็นค่าประเภทไหน',o:['ค่าที่วัดได้','ค่า limit จำกัดความเร็วสกรูช่วง pack','ความเร็วฉีด','ความเร็ว decompression'],a:1,ex:'เป็นเพดาน กันสกรูพุ่งตอนเพิ่งสลับ V-P แล้วแรงดันกระโดดขึ้น 800'},
- {q:'Decompression 3 mm มีไว้ทำไม',o:['เพิ่ม shot size','ลดแรงดันใน melt กัน drool ที่ nozzle','ช่วย cooling','ลด cycle time'],a:1,ex:'สกรูถอยเพิ่มโดยไม่หมุน ดูดแรงดันออกจาก melt เนื้อจึงไม่ไหลยืดออกจาก nozzle'}
-];
-let score=0;const qz=$('quiz');
-Q.forEach((it,qi)=>{const box=document.createElement('div');box.className='q';box.innerHTML='<b>'+(qi+1)+'. '+it.q+'</b>';const opts=document.createElement('div');opts.className='opts';const fb=document.createElement('div');fb.className='fb';
- it.o.forEach((o,oi)=>{const b=document.createElement('button');b.type='button';b.className='opt';b.textContent=o;b.onclick=()=>{if(box.dataset.done)return;box.dataset.done=1;
-  [...opts.children].forEach((x,xi)=>{if(xi===it.a)x.classList.add('right');});if(oi!==it.a)b.classList.add('wrong');else{score++;$('score').textContent='คะแนน '+score+' / '+Q.length;}
-  fb.innerHTML='<b>'+(oi===it.a?'ถูกต้อง':'ยังไม่ถูก')+'</b> '+it.ex;};opts.appendChild(b);});
- box.appendChild(opts);box.appendChild(fb);qz.appendChild(box);});
+/* แถบสถานะลอย: แสดงเมื่อเลื่อนมาถึงส่วนกราฟ และซ่อนเมื่อเลื่อนพ้นไป */
+(function(){const bar=$('stbar'),sec=$('charts');
+ const set=on=>{bar.classList.toggle('show',on);bar.setAttribute('aria-hidden',on?'false':'true');};
+ if('IntersectionObserver' in window){new IntersectionObserver(es=>{es.forEach(e=>set(e.isIntersecting));},{rootMargin:'-60px 0px -40% 0px'}).observe(sec);}
+ else{const chk=()=>{const r=sec.getBoundingClientRect();set(r.top<window.innerHeight*0.6&&r.bottom>60);};window.addEventListener('scroll',chk,{passive:true});chk();}
+})();
 </script>
 
 </html>
