@@ -60,6 +60,8 @@ button{font-family:inherit;color:inherit}
 .btn.primary:hover:not(:disabled){background:var(--accent);filter:brightness(1.08)}
 .btn.danger{color:var(--danger)}
 .btn.icon{width:34px;padding:0}
+.btn.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.btn.on:hover:not(:disabled){background:var(--accent-soft)}
 .btn:disabled{opacity:.38;cursor:default}
 .btn:focus-visible,.tool:focus-visible,.sw:focus-visible,.seg button:focus-visible,.tile:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .zoomval{font:500 13px var(--f-ui);min-width:46px;text-align:center;color:var(--muted);font-variant-numeric:tabular-nums;background:none;border:0;cursor:pointer;height:34px;border-radius:8px}
@@ -76,7 +78,7 @@ button{font-family:inherit;color:inherit}
 
 /* stage */
 .stage-wrap{grid-area:stage;position:relative;min-width:0;min-height:0}
-.stage{position:absolute;inset:0;overflow:auto;display:flex;background:var(--stage)}
+.stage{position:absolute;inset:0;overflow:auto;touch-action:none;display:flex;background:var(--stage)}
 .stage.drop{outline:3px dashed var(--accent);outline-offset:-10px}
 .stage-inner{margin:auto;padding:32px;flex:none}
 .paper{box-shadow:var(--paper-shadow);background-color:#fff;background-image:linear-gradient(45deg,#E2E5E4 25%,transparent 25%),linear-gradient(-45deg,#E2E5E4 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#E2E5E4 75%),linear-gradient(-45deg,transparent 75%,#E2E5E4 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}
@@ -188,6 +190,7 @@ kbd{font:600 11.5px var(--f-ui);background:var(--raise);border:1px solid var(--l
     <nav class="setnav hide-sm" aria-label="หน้าอื่นในชุด Injection PE"><a href="injection-cycle.html">รอบการฉีด</a><a href="injection-troubleshooting-th.html">แก้ปัญหางานฉีด</a></nav>
     <button class="btn outline" id="bAdd" title="เพิ่มรูปจากเครื่อง"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>เพิ่มรูป</button>
     <button class="btn" id="bBoard" title="ขนาดกระดานและเลย์เอาต์รวมรูป"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="8" height="18" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/></svg><span class="hide-sm">เลย์เอาต์</span></button>
+    <button class="btn" id="bLock" aria-pressed="false" title="ล็อกรูปทั้งหมดไม่ให้ขยับ (K)"><svg class="lk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 017.6-1.7"/></svg><span class="lklab">ล็อกรูป</span></button>
     <div class="sep"></div>
     <button class="btn icon" id="bUndo" title="ย้อนกลับ (Ctrl+Z)" aria-label="ย้อนกลับ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11"/></svg></button>
     <button class="btn icon" id="bRedo" title="ทำซ้ำ (Ctrl+Y)" aria-label="ทำซ้ำ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 000 11H13"/></svg></button>
@@ -244,7 +247,7 @@ const FONT='IBM Plex Sans Thai';
 const FONT_STACK='"IBM Plex Sans Thai", Tahoma, "Leelawadee UI", sans-serif';
 const SEL='#12A398';
 const COLORS=['#FF3B30','#FF9500','#FFCC00','#34C759','#00A3FF','#5856D6','#FF2D92','#FFFFFF','#111111'];
-const PROPS=['kind','baseColor','fillMode','txtStyle','bgPad','num','magId','magShape','magZoom','magMult','dimId','dimType','dimOff','textFs','textW','slotIndex','empty','heads','outline','selectable','evented','hasControls','hoverCursor','lockMovementX','lockMovementY','lockRotation','strokeUniform','objectCaching','excludeFromExport'];
+const PROPS=['kind','baseColor','fillMode','txtStyle','bgPad','num','magId','magShape','magZoom','magMult','locked','dimId','dimType','dimOff','textFs','textW','slotIndex','empty','heads','outline','selectable','evented','hasControls','hoverCursor','lockMovementX','lockMovementY','lockRotation','strokeUniform','objectCaching','excludeFromExport'];
 const TEMPLATES={
   two_h:[[0,0,.5,1],[.5,0,.5,1]],
   two_v:[[0,0,1,.5],[0,.5,1,.5]],
@@ -263,6 +266,7 @@ const SIZES=[['1:1',1080,1080],['4:3',1600,1200],['3:4',1200,1600],['16:9',1920,
 let W=1600,H=1200,zoom=1,autoFit=true,tool='select';
 const st={dimType:'linear',color:'#FF3B30',width:8,textSize:56,textStyle:'outline',fill:'none',heads:'end',outline:true,badgeSize:64,magShape:'rect',magZoom:2.5};
 const layout={tpl:null,gap:16,pad:16,radius:0};
+const G_CANCEL=()=>!!(window.__chijudG&&window.__chijudG.cancel);
 let muted=false,loading=false,cropping=null,drawing=null,pickSlot=null,cascade=0;
 
 /* ---------- helpers ---------- */
@@ -552,6 +556,7 @@ function decorate(o){
   if(k==='text'){o.setControlsVisibility({ml:false,mr:false,mt:false,mb:false});if(o.bgPad)o.padding=o.bgPad*o.fontSize;else delete o.padding;}
   if(k==='badge'||k==='magView')o.setControlsVisibility({ml:false,mr:false,mt:false,mb:false,mtr:false});
   if(k==='magSrc'){o.setControlsVisibility({mtr:false});o.lockRotation=true;}
+  if(k==='image'||k==='mosaic'){o.selectable=!o.locked;o.evented=!o.locked;}
   if(k==='slot'){o.selectable=false;o.hoverCursor='pointer';o.hasControls=false;}
   if(k==='magLink'){o.selectable=false;o.evented=false;}
   if(o.type==='dim')o.setControlsVisibility({p2:needs3(o.dimType)});
@@ -596,6 +601,22 @@ function syncUI(){
   $('#bUndo').disabled=hi<=0;$('#bRedo').disabled=hi>=hist.length-1;
   const n=canvas.getObjects().filter(o=>!o.excludeFromExport).length;
   $('#empty').hidden=n>0;
+  const L=canvas.getObjects().filter(isLockable),all=L.length>0&&L.every(o=>o.locked),b=$('#bLock');
+  b.classList.toggle('on',all);b.setAttribute('aria-pressed',String(all));
+  b.querySelector('.lk').innerHTML=all?'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>':'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 017.6-1.7"/>';
+  b.querySelector('.lklab').textContent=all?'รูปล็อกอยู่':'ล็อกรูป';
+  b.title=all?'กดเพื่อปลดล็อก ให้ลากรูปได้อีกครั้ง (K)':'ล็อกรูปทั้งหมดไม่ให้ขยับ (K)';
+}
+const isLockable=o=>o.kind==='image'||o.kind==='mosaic';
+function toggleLockAll(){
+  const L=canvas.getObjects().filter(isLockable);
+  if(!L.length){toast('ยังไม่มีรูปให้ล็อก');return;}
+  if(cropping)cancelCrop(true);
+  const all=L.every(o=>o.locked);
+  if(!all&&canvas.getActiveObjects().some(isLockable))canvas.discardActiveObject();
+  L.forEach(o=>{o.locked=!all;decorate(o);});
+  canvas.requestRenderAll();save();syncUI();updatePanel();
+  toast(all?'ปลดล็อกแล้ว ลากรูปได้ตามปกติ':'ล็อกรูปแล้ว ขยับเส้นและข้อความได้ รูปจะไม่ขยับตาม');
 }
 
 /* ---------- zoom ---------- */
@@ -707,7 +728,7 @@ async function addFiles(files,slot,point){
     slot=null;last=img;
   }
   muted=false;
-  if(last){if(tool!=='select')setTool('select');canvas.setActiveObject(last);}
+  if(last){if(tool!=='select')setTool('select');canvas.setActiveObject(last);if(TOUCH)setTimeout(()=>toast('จัดรูปเสร็จแล้ว กด ล็อกรูป ด้านบน รูปจะไม่ขยับตามนิ้ว'),400);}
   canvas.requestRenderAll();save();syncUI();updatePanel();
 }
 
@@ -887,7 +908,7 @@ function addText(p){
 const tempStyle=()=>({fill:'rgba(18,163,152,.10)',stroke:SEL,strokeWidth:2/zoom,strokeDashArray:[8/zoom,6/zoom],strokeUniform:true,objectCaching:false,excludeFromExport:true,selectable:false,evented:false});
 canvas.on('mouse:down',o=>{
   const p=canvas.getPointer(o.e);
-  if(tool==='select'){const t=o.target;if(t&&t.kind==='slot'&&!o.e.shiftKey){pickSlot=t;$('#file').click();}return;}
+  if(tool==='select'){const t=o.target;if(t&&t.kind==='slot'&&t.empty&&!o.e.shiftKey){pickSlot=t;$('#file').click();}return;}
   if(tool==='pen')return;
   if(tool==='dim'){
     if(!dimDraft){const obj=new fabric.Dim({stroke:st.color,strokeWidth:st.width,dimType:st.dimType,outline:st.outline,kind:'dim',baseColor:st.color,textFs:Math.round(st.textSize*.75),excludeFromExport:true});obj.setAbs([p,p,p]);muted=true;canvas.add(obj);muted=false;dimDraft={obj,step:1};updatePanel();}
@@ -923,6 +944,7 @@ canvas.on('mouse:move',o=>{
   obj.setCoords();canvas.requestRenderAll();
 });
 canvas.on('mouse:up',o=>{
+  if(G_CANCEL())return;
   if(dimDraft){dimDraftUp(canvas.getPointer(o.e),o.e);return;}
   if(!drawing)return;
   const{obj}=drawing;drawing=null;
@@ -1102,7 +1124,7 @@ function boardPanel(){
   const sizes=`<div class="tiles sizes">${SIZES.map(([l,w,h])=>`<button class="tile ${w===W&&h===H?'on':''}" data-act="size" data-v="${w},${h}">${l}<small>${w}×${h}</small></button>`).join('')}</div><div class="custom-size"><input id="cw" type="number" min="100" max="6000" value="${W}" aria-label="กว้าง"><span>×</span><input id="ch" type="number" min="100" max="6000" value="${H}" aria-label="สูง"><button class="btn outline" data-act="size-custom">ใช้</button></div>`;
   const bgs=[['#FFFFFF','ขาว'],['#F1F3F2','เทาอ่อน'],['#1B1F1E','ดำ'],['','โปร่งใส']];
   const bg=`<div class="swatches" style="grid-template-columns:repeat(9,1fr)">${bgs.map(([c,l])=>`<button class="sw ${c?'':'none'} ${eq(canvas.backgroundColor||'',c)?'on':''}" data-act="bg" data-v="${c}" style="--c:${c||'transparent'}" title="${l}" aria-label="พื้นหลัง${l}"></button>`).join('')}</div>${swatches(canvas.backgroundColor||'#ffffff','bg').split('</div>').slice(1).join('</div>').replace('สีอื่น','สีพื้นหลังอื่น')}`;
-  const keys=[['V T A L R O','เลือกเครื่องมือ'],['P N H B Z','ปากกา เลข ไฮไลต์ โมเสก ซูม'],['D','เส้นบอกขนาด'],['Ctrl+V','วางรูปจากคลิปบอร์ด'],['Ctrl+Z / Ctrl+Y','ย้อนกลับ / ทำซ้ำ'],['Ctrl+D','ทำสำเนา'],['Delete','ลบที่เลือก'],['ปุ่มลูกศร','ขยับทีละนิด (Shift = 10)'],['Ctrl+Shift+C','คัดลอกรูปไปวางในไลน์'],['Ctrl+S','ส่งออกรูป'],['Ctrl+เลื่อนเมาส์','ซูมมุมมอง']];
+  const keys=[['V T A L R O','เลือกเครื่องมือ'],['P N H B Z','ปากกา เลข ไฮไลต์ โมเสก ซูม'],['D','เส้นบอกขนาด'],['K','ล็อก / ปลดล็อกรูปทั้งหมด'],['สองนิ้ว (มือถือ)','ซูมและเลื่อนดู รูปไม่ขยับ'],['Ctrl+V','วางรูปจากคลิปบอร์ด'],['Ctrl+Z / Ctrl+Y','ย้อนกลับ / ทำซ้ำ'],['Ctrl+D','ทำสำเนา'],['Delete','ลบที่เลือก'],['ปุ่มลูกศร','ขยับทีละนิด (Shift = 10)'],['Ctrl+Shift+C','คัดลอกรูปไปวางในไลน์'],['Ctrl+S','ส่งออกรูป'],['Ctrl+เลื่อนเมาส์','ซูมมุมมอง']];
   return head('กระดาน',`${W} × ${H} px · ${layout.tpl?'เลย์เอาต์ '+TEMPLATES[layout.tpl].length+' ช่อง':'วางอิสระ'}`)
     +sec('เลย์เอาต์รวมรูป',tiles+tune)+sec('ขนาดกระดาน',sizes)+sec('พื้นหลัง',bg)
     +sec('คีย์ลัด',`<div class="keys">${keys.map(([k,v])=>`<kbd>${k}</kbd><span>${v}</span>`).join('')}</div>`);
@@ -1131,6 +1153,7 @@ function updatePanel(){
     h+=one.slotIndex!=null?sec('รูปในช่อง',`<div class="btn-col"><button class="btn outline" data-act="slot-refit">จัดรูปให้เต็มช่องใหม่</button><button class="btn outline" data-act="slot-free">เอาออกจากช่อง</button></div><p class="tip">ลากหรือย่อขยายรูป เพื่อเลือกส่วนที่จะโชว์ในช่อง</p>`)
       :sec('รูป',`<div class="btn-col"><button class="btn outline" data-act="crop">ครอปรูป</button>${(one.cropX||one.cropY||one.width<(one.getElement().naturalWidth||one.getElement().width))?'<button class="btn outline" data-act="crop-reset">คืนรูปเต็มก่อนครอป</button>':''}<button class="btn outline" data-act="img-fit">ขยายให้พอดีกระดาน</button><button class="btn outline" data-act="board-to-img">ปรับขนาดกระดานให้เท่ารูปนี้</button></div>`);
   }
+  if(objs.length&&objs.every(isLockable))h+=sec('',`<button class="btn outline" data-act="lock-one" style="width:100%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x=\"5\" y=\"11\" width=\"14\" height=\"10\" rx=\"2\"/><path d=\"M8 11V7a4 4 0 018 0v4\"/></svg>${objs.length>1?'ล็อกรูปที่เลือกไม่ให้ขยับ':'ล็อกรูปนี้ไม่ให้ขยับ'}</button><p class="tip">ปลดล็อกได้จากปุ่ม <b>รูปล็อกอยู่</b> ด้านบน</p>`);
   if(objs.length)h+=sec('จัดการ',`<div class="layer"><button class="btn outline" data-act="layer" data-v="front">ไว้หน้าสุด</button><button class="btn outline" data-act="layer" data-v="up">ขึ้น 1 ชั้น</button><button class="btn outline" data-act="layer" data-v="down">ลง 1 ชั้น</button><button class="btn outline" data-act="layer" data-v="back">ไว้หลังสุด</button><button class="btn outline" data-act="dup">ทำสำเนา</button><button class="btn outline danger" data-act="del">ลบ</button></div>`);
   P.innerHTML=h;
 }
@@ -1163,6 +1186,7 @@ function wire(){
       case 'bg':applySetting('bg',v,true);break;
       case 'tstyle':st.textStyle=v;objs.filter(o=>o.kind==='text').forEach(o=>applyTextStyle(o,v,o.baseColor));save();break;
       case 'heads':if(v!=='none')st.heads=v;objs.filter(o=>o.type==='arrow').forEach(o=>{o.heads=v;o.kind=v==='none'?'line':'arrow';o.dirty=true;});if(!objs.length&&(tool==='arrow'||tool==='line')){setTool(v==='none'?'line':'arrow');return;}save();break;
+      case 'lock-one':objs.filter(isLockable).forEach(o=>{o.locked=true;decorate(o);});canvas.discardActiveObject();save();syncUI();toast('ล็อกแล้ว ปลดล็อกได้จากปุ่มด้านบน');break;
       case 'dimtype':if(dimDraft)cancelDimDraft();st.dimType=v;objs.filter(o=>o.type==='dim').forEach(o=>convertDim(o,v));if(objs.length)save();break;
       case 'fill':st.fill=v;objs.filter(o=>o.kind==='rect'||o.kind==='ellipse').forEach(o=>{o.fillMode=v;o.set('fill',fillFor(v,o.baseColor));});save();break;
       case 'magShape':st.magShape=v;new Set(objs.filter(o=>o.magId).map(o=>o.magId)).forEach(id=>setMagStyle(id,{shape:v}));save();break;
@@ -1192,6 +1216,7 @@ function wire(){
   $('#bUndo').onclick=undo;$('#bRedo').onclick=redo;
   $('#bZoomIn').onclick=()=>zoomBy(1.2);$('#bZoomOut').onclick=()=>zoomBy(1/1.2);$('#bZoom').onclick=fitZoom;
   $('#bClear').onclick=clearBoard;
+  $('#bLock').onclick=toggleLockAll;
   $('#bCopy').onclick=copyImage;$('#bExport').onclick=()=>openExport();
   $('#bStartFresh').onclick=doClear;$('#bBannerX').onclick=()=>{$('#banner').hidden=true;};
   $('#exModal').addEventListener('click',e=>{if(e.target.id==='exModal'||e.target.closest('[data-close]'))$('#exModal').hidden=true;});
@@ -1220,6 +1245,86 @@ function wire(){
   stageEl.addEventListener('mousedown',e=>{if(e.target===stageEl||e.target.classList.contains('stage-inner')){if(cropping)return;canvas.discardActiveObject();canvas.requestRenderAll();}});
   stageEl.addEventListener('wheel',e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();zoomBy(e.deltaY<0?1.1:1/1.1);}},{passive:false});
   stageEl.addEventListener('scroll',()=>canvas.calcOffset());
+
+  /* ---- touch: two fingers zoom/scroll the view, one finger on empty area scrolls; objects never move with a pinch ---- */
+  const G=window.__chijudG={state:'idle',pend:null,timer:0,before:null,draftBefore:false,snap:null,last:null,dist0:0,z0:1,pt:null,moved:0};
+  const tp=t=>({x:t.clientX,y:t.clientY});
+  const mid2=ts=>({x:(ts[0].clientX+ts[1].clientX)/2,y:(ts[0].clientY+ts[1].clientY)/2});
+  const dist2=ts=>Math.hypot(ts[0].clientX-ts[1].clientX,ts[0].clientY-ts[1].clientY)||1;
+  const swallow=e=>{e.stopPropagation();if(e.cancelable)e.preventDefault();};
+  function onBackground(e){
+    if(!e.target.closest||!e.target.closest('.canvas-container'))return true;
+    if(tool!=='select'||cropping)return false;
+    let t=null;try{t=canvas.findTarget(e,false);}catch(_){}
+    return !t||(t.kind==='slot'&&!t.empty);
+  }
+  function flush(){
+    clearTimeout(G.timer);if(!G.pend)return;const ev=G.pend;G.pend=null;G.state='fabric';
+    G.before=new Set(canvas.getObjects());G.draftBefore=!!dimDraft;
+    try{canvas._onTouchStart(ev);}catch(_){}
+    const tr=canvas._currentTransform;G.snap=null;
+    if(tr&&tr.target){const o=tr.target;G.snap={o,x1:o.x1,y1:o.y1,x2:o.x2,y2:o.y2,pts:o.pts&&o.pts.map(p=>({x:p.x,y:p.y}))};}
+  }
+  function cancelFabric(e){
+    // a second finger arrived after the first already reached the editor: undo whatever the first finger started
+    const tr=canvas._currentTransform;
+    if(tr&&tr.target){const o=tr.target;o.set(tr.original);const s=G.snap;if(s&&s.o===o){if(o.type==='arrow')o.set({x1:s.x1,y1:s.y1,x2:s.x2,y2:s.y2});if(s.pts)o.pts=s.pts;}o.setCoords();liveMag(o);}
+    canvas._currentTransform=null;canvas._groupSelector=null;
+    G.cancel=true;
+    try{const ch=e.changedTouches&&e.changedTouches[0]?[e.changedTouches[0]]:[e.touches[0]];canvas._onTouchEnd({type:'touchend',touches:[],changedTouches:ch,target:canvas.upperCanvasEl,preventDefault(){},stopPropagation(){}});}catch(_){}
+    G.cancel=false;
+    if(drawing){muted=true;canvas.remove(drawing.obj);muted=false;drawing=null;}
+    if(dimDraft&&!G.draftBefore)cancelDimDraft();
+    let removed=false;
+    if(G.before)canvas.getObjects().filter(o=>!G.before.has(o)&&!(dimDraft&&o===dimDraft.obj)).forEach(o=>{if(o.isEditing)o.exitEditing();muted=true;canvas.remove(o);muted=false;removed=true;});
+    canvas.clearContext(canvas.contextTop);canvas.requestRenderAll();
+    if(removed)save();updatePanel();
+  }
+  function startPinch(e){
+    G.state='pinch';G.z0=zoom;G.dist0=dist2(e.touches);G.last=mid2(e.touches);
+    const r=canvas.upperCanvasEl.getBoundingClientRect();G.pt={x:(G.last.x-r.left)/zoom,y:(G.last.y-r.top)/zoom};
+  }
+  function panBy(dx,dy){stageEl.scrollLeft-=dx;stageEl.scrollTop-=dy;}
+  window.addEventListener('touchstart',e=>{
+    if(G.state==='idle'){
+      if(e.touches.length!==1||!e.target.closest||!e.target.closest('#stage'))return;
+      if(onBackground(e)){G.state='pan';G.last=tp(e.touches[0]);G.moved=0;swallow(e);return;}
+      G.state='pending';G.pend=e;G.last=tp(e.touches[0]);swallow(e);
+      G.timer=setTimeout(flush,90);return;
+    }
+    if(e.touches.length>=2){
+      if(G.state==='pending'){clearTimeout(G.timer);G.pend=null;}
+      else if(G.state==='fabric')cancelFabric(e);
+      startPinch(e);swallow(e);return;
+    }
+    if(G.state!=='fabric')swallow(e);
+  },{capture:true,passive:false});
+  window.addEventListener('touchmove',e=>{
+    if(G.state==='idle'||G.state==='fabric')return;
+    if(G.state==='pending'){const p=tp(e.touches[0]);if(Math.hypot(p.x-G.last.x,p.y-G.last.y)>6){flush();return;}swallow(e);return;}
+    swallow(e);
+    if(G.state==='pinch'&&e.touches.length>=2){
+      const m=mid2(e.touches);autoFit=false;applyZoom(G.z0*dist2(e.touches)/G.dist0);
+      const r=canvas.upperCanvasEl.getBoundingClientRect();
+      stageEl.scrollLeft+=r.left-(m.x-G.pt.x*zoom);stageEl.scrollTop+=r.top-(m.y-G.pt.y*zoom);canvas.calcOffset();return;
+    }
+    const p=tp(e.touches[0]);if(!G.last)G.last=p;
+    G.moved+=Math.hypot(p.x-G.last.x,p.y-G.last.y);panBy(p.x-G.last.x,p.y-G.last.y);G.last=p;
+  },{capture:true,passive:false});
+  const endT=e=>{
+    if(G.state==='idle')return;
+    if(G.state==='fabric'){if(!e.touches.length)G.state='idle';return;}
+    if(G.state==='pending'){flush();if(!e.touches.length)G.state='idle';return;}
+    swallow(e);
+    if(e.touches.length===1){G.last=tp(e.touches[0]);if(G.state==='pinch'){G.state='pan';G.moved=99;}return;}
+    if(!e.touches.length){
+      if(G.state==='pan'&&G.moved<6&&tool==='select'&&!cropping){canvas.discardActiveObject();canvas.requestRenderAll();}
+      G.state='idle';G.last=null;
+    }
+  };
+  window.addEventListener('touchend',endT,{capture:true,passive:false});
+  window.addEventListener('touchcancel',e=>{if(G.state==='pending'){clearTimeout(G.timer);G.pend=null;}if(!e.touches.length&&G.state!=='fabric')G.state='idle';if(G.state==='fabric'&&!e.touches.length)G.state='idle';},{capture:true,passive:false});
+
   window.addEventListener('resize',()=>{if(autoFit)fitZoom();else canvas.calcOffset();});
 
   // keyboard
@@ -1242,6 +1347,7 @@ function wire(){
     if(e.key==='Escape'&&dimDraft){cancelDimDraft();return;}
     if(e.key==='Escape'){if(drawing)return;if(tool!=='select')setTool('select');else{canvas.discardActiveObject();canvas.requestRenderAll();}return;}
     if(e.key.startsWith('Arrow')){const d=e.shiftKey?10:1;const m={ArrowLeft:[-d,0],ArrowRight:[d,0],ArrowUp:[0,-d],ArrowDown:[0,d]}[e.key];if(canvas.getActiveObject()){e.preventDefault();nudge(m[0],m[1]);}return;}
+    if(k==='k'){toggleLockAll();return;}
     const t=TOOLS.find(x=>x!=='-'&&x[2].toLowerCase()===k);if(t){setTool(t[0]);}
   });
 }
@@ -1279,7 +1385,7 @@ async function buildSample(){
   const cv=document.createElement('canvas');cv.width=1600;cv.height=1200;drawSample(cv.getContext('2d'));
   const img=await canvasToImg(cv,'image/jpeg');
   muted=true;
-  canvas.add(new fabric.Image(img,{left:800,top:600,kind:'image'}));canvas.renderAll();
+  const sImg=new fabric.Image(img,{left:800,top:600,kind:'image',locked:true});decorate(sImg);canvas.add(sImg);canvas.renderAll();
   await makeMagnifier({x:510,y:570,w:190,h:110},{zoom:2.4,pos:{x:1250,y:255},color:'#34C759',width:7,quiet:true});
   muted=true;
   const lab=new fabric.IText('ฉลากระบุ LOT ครบ',{left:1250,top:455,fontFamily:FONT_STACK,fontWeight:700,fontSize:42,textAlign:'center',lineHeight:1.18,kind:'text'});applyTextStyle(lab,'label','#34C759');canvas.add(lab);
