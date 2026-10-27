@@ -164,6 +164,7 @@ footer{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);color:v
   <span class="brand">Injection PE</span>
   <a href="injection-cycle.html">รอบการฉีด (Cycle)</a>
   <a href="injection-troubleshooting-th.html" aria-current="page">แก้ปัญหางานฉีด</a>
+  <a href="photo-markup.html">มาร์กรูปชิ้นงาน</a>
 </nav>
 <div class="wrap">
 
@@ -538,7 +539,7 @@ function render(filter, query){
         (why ? '<span class="why">' + why + '</span>' : '') +
         '</span></li>';
     });
-    html += '</ol>' + xlinks(IDS[d.en]) + '</div></details>';
+    html += '</ol>' + xlinks(IDS[d.en]) + '<div class="xlink"><span>มีรูปชิ้นงาน:</span><a href="photo-markup.html?d=' + IDS[d.en] + '&amp;n=' + encodeURIComponent(d.th.replace(/<[^>]*>/g,'') + ' (' + d.en + ')') + '">มาร์กจุดบนรูป</a></div></div></details>';
   });
   list.innerHTML = html;
 }
