@@ -119,6 +119,9 @@ button{font-family:inherit;color:inherit}
 .tile.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
 .tiles.dims .tile{font-size:10.5px;gap:4px;padding:8px 2px 6px}
 .tiles.dims svg{width:26px;height:26px}
+.dsteps{margin:0;padding-left:20px;display:grid;gap:4px;font-size:13.5px;color:var(--muted)}
+.dsteps li.now{color:var(--accent);font-weight:600}
+.dsteps li.done{text-decoration:line-through;opacity:.6}
 .tiles.sizes{grid-template-columns:repeat(3,1fr)}
 .tiles.sizes .tile{padding:8px 4px;font-size:12px}
 .tiles.sizes .tile small{font-size:10.5px;opacity:.8;font-variant-numeric:tabular-nums}
@@ -360,6 +363,17 @@ const DIM_TYPES=[
   ['ordinate','Ordinate','พิกัด','<path d="M5 20V11M5 20h9"/><path d="M15 4v4l3 3v3"/><circle cx="15" cy="4" r="1.2" fill="currentColor"/>'],
   ['jogged','Jogged','รัศมีแบบหัก','<path d="M4 20A16 16 0 0 1 20 4"/><path d="M6 18l4.5-4.5 1 2.5 4-4-1-2.5 3-3"/>']
 ];
+const DIM_STEPS={
+  linear:['คลิกจุดที่ 1','คลิกจุดที่ 2','คลิกวางตำแหน่งเส้นบอกขนาด'],
+  aligned:['คลิกจุดที่ 1','คลิกจุดที่ 2','คลิกวางตำแหน่งเส้นบอกขนาด'],
+  angular:['คลิกจุดยอดมุม','คลิกปลายแขนข้างที่ 1','คลิกปลายแขนข้างที่ 2'],
+  arc:['คลิกจุดเริ่มส่วนโค้ง','คลิกจุดปลายส่วนโค้ง','คลิกจุดใดก็ได้บนส่วนโค้ง'],
+  radius:['คลิกจุดศูนย์กลาง','คลิกจุดบนขอบวงกลม'],
+  diameter:['คลิกขอบวงกลมด้านหนึ่ง','คลิกขอบอีกด้านตรงข้าม'],
+  ordinate:['คลิกจุดที่จะบอกพิกัด','คลิกวางตำแหน่งตัวเลข'],
+  jogged:['คลิกจุดศูนย์กลาง (วางใกล้ๆ ได้)','คลิกจุดบนส่วนโค้ง']
+};
+let dimDraft=null;
 const needs3=t=>t==='linear'||t==='aligned'||t==='angular'||t==='arc';
 const DIM_PREFIX={radius:'R',jogged:'R',diameter:'Ø',arc:'⌒'};
 function dimGeom(type,P,sw,fs,tw){
@@ -470,6 +484,29 @@ function addDimText(d){
   const t=new fabric.IText(pre+val+suf,{left:a.x,top:a.y,fontFamily:FONT_STACK,fontWeight:700,fontSize:d.textFs,textAlign:'center',lineHeight:1.18,kind:'text',dimId:d.dimId,dimOff:{x:0,y:0}});
   applyTextStyle(t,'outline',d.baseColor||d.stroke);
   canvas.add(t);syncDimText(d);canvas.setActiveObject(t);t.enterEditing();t.setSelectionStart(pre.length);t.setSelectionEnd(pre.length+val.length);canvas.requestRenderAll();
+}
+function dimStepsHtml(type){
+  const cur=dimDraft?dimDraft.step:0;
+  return '<ol class="dsteps">'+DIM_STEPS[type].map((t,i)=>`<li class="${i===cur?'now':i<cur?'done':''}">${t}</li>`).join('')+'</ol><p class="tip">กด <kbd>Esc</kbd> เพื่อยกเลิกเส้นที่วาดค้าง · จะลากแทนคลิกก็ได้</p>';
+}
+function cancelDimDraft(){if(!dimDraft)return;muted=true;canvas.remove(dimDraft.obj);muted=false;dimDraft=null;canvas.requestRenderAll();updatePanel();}
+function snap45(q,x,y,e){if(!e||!e.shiftKey)return{x,y};const ang=Math.atan2(y-q.y,x-q.x),l=Math.hypot(x-q.x,y-q.y),s=Math.round(ang/(Math.PI/4))*(Math.PI/4);return{x:q.x+Math.cos(s)*l,y:q.y+Math.sin(s)*l};}
+function dimDraftMove(p,e){
+  const o=dimDraft.obj,A=o.absPts();
+  if(dimDraft.step===1){const q=snap45(A[0],p.x,p.y,e);A[1]=q;A[2]=dimDefaultP2(o.dimType,A[0],q);}
+  else A[2]={x:p.x,y:p.y};
+  o.setAbs(A);canvas.requestRenderAll();
+}
+function dimDraftUp(p,e){
+  const o=dimDraft.obj,A=o.absPts();
+  if(dimDraft.step===1){
+    if(Math.hypot(p.x-A[0].x,p.y-A[0].y)<8/zoom)return; // first click released in place: wait for the next click
+    dimDraftMove(p,e);
+    if(needs3(o.dimType)){dimDraft.step=2;updatePanel();return;}
+  }else{A[2]={x:p.x,y:p.y};o.setAbs(A);}
+  dimDraft=null;
+  o.excludeFromExport=false;o.dimId='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  decorate(o);setTool('select');addDimText(o);save();updatePanel();
 }
 function convertDim(d,type){
   const A=d.absPts(),was3=needs3(d.dimType);d.dimType=type;
@@ -830,6 +867,7 @@ function buildRail(){
 }
 function setTool(t){
   if(cropping)cancelCrop(true);
+  if(dimDraft&&t!=='dim')cancelDimDraft();
   const a=canvas.getActiveObject();if(a&&a.isEditing)a.exitEditing();
   tool=t;
   canvas.isDrawingMode=t==='pen';
@@ -851,6 +889,10 @@ canvas.on('mouse:down',o=>{
   const p=canvas.getPointer(o.e);
   if(tool==='select'){const t=o.target;if(t&&t.kind==='slot'&&!o.e.shiftKey){pickSlot=t;$('#file').click();}return;}
   if(tool==='pen')return;
+  if(tool==='dim'){
+    if(!dimDraft){const obj=new fabric.Dim({stroke:st.color,strokeWidth:st.width,dimType:st.dimType,outline:st.outline,kind:'dim',baseColor:st.color,textFs:Math.round(st.textSize*.75),excludeFromExport:true});obj.setAbs([p,p,p]);muted=true;canvas.add(obj);muted=false;dimDraft={obj,step:1};updatePanel();}
+    return;
+  }
   if(tool==='text'){addText(p);return;}
   if(tool==='number'){const g=makeBadge(nextBadgeNum(),p.x,p.y,st.color,st.badgeSize);canvas.add(g);canvas.requestRenderAll();save();updatePanel();return;}
   let obj;
@@ -864,6 +906,7 @@ canvas.on('mouse:down',o=>{
   drawing={obj,sx:p.x,sy:p.y};muted=true;canvas.add(obj);muted=false;
 });
 canvas.on('mouse:move',o=>{
+  if(dimDraft){dimDraftMove(canvas.getPointer(o.e),o.e);return;}
   if(!drawing)return;
   const p=canvas.getPointer(o.e),d=drawing,obj=d.obj;let x=p.x,y=p.y;
   if(obj.type==='dim'){const s={x:d.sx,y:d.sy};if(o.e.shiftKey){const ang=Math.atan2(y-d.sy,x-d.sx),len=Math.hypot(x-d.sx,y-d.sy),sn=Math.round(ang/(Math.PI/4))*(Math.PI/4);x=d.sx+Math.cos(sn)*len;y=d.sy+Math.sin(sn)*len;}const e={x,y};obj.setAbs([s,e,dimDefaultP2(obj.dimType,s,e)]);canvas.requestRenderAll();return;}
@@ -879,7 +922,8 @@ canvas.on('mouse:move',o=>{
   }
   obj.setCoords();canvas.requestRenderAll();
 });
-canvas.on('mouse:up',()=>{
+canvas.on('mouse:up',o=>{
+  if(dimDraft){dimDraftUp(canvas.getPointer(o.e),o.e);return;}
   if(!drawing)return;
   const{obj}=drawing;drawing=null;
   if(obj.type==='dim'){const A=obj.absPts();if(Math.hypot(A[1].x-A[0].x,A[1].y-A[0].y)<8){muted=true;canvas.remove(obj);muted=false;canvas.requestRenderAll();return;}obj.excludeFromExport=false;obj.dimId='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);decorate(obj);setTool('select');addDimText(obj);save();updatePanel();return;}
@@ -1072,7 +1116,8 @@ function updatePanel(){
   const kinds=objs.length?new Set(objs.map(o=>o.kind==='magSrc'?'magView':o.kind)):new Set([TOOLKIND[tool]]);
   const ref=objs[0];const one=objs.length===1?ref:null;const has=k=>kinds.has(k);
   const title=objs.length>1?`เลือกไว้ ${objs.length} ชิ้น`:NAMES[[...kinds][0]]||'วัตถุ';
-  let h=head(title,objs.length?'':HINTS[tool]);
+  let h=head(title,objs.length||tool==='dim'?'':HINTS[tool]);
+  if(!objs.length&&tool==='dim')h+=sec('วิธีวาด · '+DIM_TYPES.find(x=>x[0]===st.dimType)[1],dimStepsHtml(st.dimType));
   const colorable=['dim','text','arrow','line','rect','ellipse','pen','badge','highlight','magView'];
   if([...kinds].some(k=>colorable.includes(k)))h+=sec('สี',swatches(ref?ref.baseColor||st.color:st.color));
   if(has('text')){const t=objs.find(o=>o.kind==='text');h+=sec('สไตล์ข้อความ',textStyles(t?t.txtStyle:st.textStyle)+range('textSize','ขนาดตัวอักษร',16,240,t?Math.round(t.fontSize*t.scaleY):st.textSize));}
@@ -1118,7 +1163,7 @@ function wire(){
       case 'bg':applySetting('bg',v,true);break;
       case 'tstyle':st.textStyle=v;objs.filter(o=>o.kind==='text').forEach(o=>applyTextStyle(o,v,o.baseColor));save();break;
       case 'heads':if(v!=='none')st.heads=v;objs.filter(o=>o.type==='arrow').forEach(o=>{o.heads=v;o.kind=v==='none'?'line':'arrow';o.dirty=true;});if(!objs.length&&(tool==='arrow'||tool==='line')){setTool(v==='none'?'line':'arrow');return;}save();break;
-      case 'dimtype':st.dimType=v;objs.filter(o=>o.type==='dim').forEach(o=>convertDim(o,v));if(objs.length)save();break;
+      case 'dimtype':if(dimDraft)cancelDimDraft();st.dimType=v;objs.filter(o=>o.type==='dim').forEach(o=>convertDim(o,v));if(objs.length)save();break;
       case 'fill':st.fill=v;objs.filter(o=>o.kind==='rect'||o.kind==='ellipse').forEach(o=>{o.fillMode=v;o.set('fill',fillFor(v,o.baseColor));});save();break;
       case 'magShape':st.magShape=v;new Set(objs.filter(o=>o.magId).map(o=>o.magId)).forEach(id=>setMagStyle(id,{shape:v}));save();break;
       case 'mag-refresh':new Set(objs.filter(o=>o.magId).map(o=>o.magId)).forEach(id=>recapture(id));break;
@@ -1194,6 +1239,7 @@ function wire(){
     if(mod)return;
     if(cropping){if(e.key==='Enter'){e.preventDefault();applyCrop();}else if(e.key==='Escape')cancelCrop();return;}
     if(e.key==='Delete'||e.key==='Backspace'){if(canvas.getActiveObject()){e.preventDefault();removeSelected();}return;}
+    if(e.key==='Escape'&&dimDraft){cancelDimDraft();return;}
     if(e.key==='Escape'){if(drawing)return;if(tool!=='select')setTool('select');else{canvas.discardActiveObject();canvas.requestRenderAll();}return;}
     if(e.key.startsWith('Arrow')){const d=e.shiftKey?10:1;const m={ArrowLeft:[-d,0],ArrowRight:[d,0],ArrowUp:[0,-d],ArrowDown:[0,d]}[e.key];if(canvas.getActiveObject()){e.preventDefault();nudge(m[0],m[1]);}return;}
     const t=TOOLS.find(x=>x!=='-'&&x[2].toLowerCase()===k);if(t){setTool(t[0]);}
