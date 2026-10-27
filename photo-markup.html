@@ -221,7 +221,7 @@ kbd{font:600 11.5px var(--f-ui);background:var(--raise);border:1px solid var(--l
         <span class="ex-dim" id="exDim"></span>
       </div>
       <div class="ex-prev"><img id="exImg" alt="ตัวอย่างรูปที่จะส่งออก"></div>
-      <p class="tip">ถ้าปุ่มดาวน์โหลดไม่ทำงาน ให้คลิกขวาที่รูปด้านบน แล้วเลือก <b>บันทึกรูปภาพเป็น…</b> หรือ <b>คัดลอกรูปภาพ</b></p>
+      <p class="tip" id="exHint">ถ้าปุ่มดาวน์โหลดไม่ทำงาน ให้คลิกขวาที่รูปด้านบน แล้วเลือก <b>บันทึกรูปภาพเป็น…</b> หรือ <b>คัดลอกรูปภาพ</b></p>
     </div>
     <footer><button class="btn outline" id="exCopy">คัดลอกรูป</button><button class="btn primary" id="exDl">ดาวน์โหลด</button></footer>
   </div>
@@ -501,7 +501,7 @@ function markSlotEmpty(i){const s=getSlots().find(x=>x.slotIndex===i);if(s&&!can
 function loadFileImage(file){
   return new Promise((res,rej)=>{
     const url=URL.createObjectURL(file),im=new Image();
-    im.onload=async()=>{const M=3200,m=Math.max(im.naturalWidth,im.naturalHeight);
+    im.onload=async()=>{const M=2400,m=Math.max(im.naturalWidth,im.naturalHeight);
       if(m>M){const k=M/m,cv=document.createElement('canvas');cv.width=Math.round(im.naturalWidth*k);cv.height=Math.round(im.naturalHeight*k);cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height);res(await canvasToImg(cv,file.type==='image/png'?'image/png':'image/jpeg'));}
       else res(im);};
     im.onerror=()=>rej(new Error('load'));im.src=url;
@@ -841,16 +841,30 @@ function exportEl(mult,jpeg){
   if(keep)canvas.setActiveObject(keep);canvas.requestRenderAll();
   return el;
 }
-const ex={fmt:'png',scale:1,url:''};
+const TOUCH=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
+const ex={fmt:'png',scale:1,blob:null,url:'',w:0,h:0,job:0,chosen:false};
 function fileName(){const d=new Date(),p=n=>String(n).padStart(2,'0');return `chijud-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.${ex.fmt==='jpeg'?'jpg':'png'}`;}
-function renderExport(){
+const exType=()=>ex.fmt==='jpeg'?'image/jpeg':'image/png';
+function setSeg(id,v){$(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.v===String(v)));}
+// Build the file once as a Blob (async, no base64 string) and reuse it for preview, save and share
+async function renderExport(){
+  const job=++ex.job;ex.blob=null;
+  $('#exDl').disabled=true;$('#exCopy').disabled=true;$('#exDim').textContent='กำลังเตรียมรูป…';
+  await new Promise(r=>requestAnimationFrame(()=>setTimeout(r,0)));
+  if(job!==ex.job)return;
   const el=exportEl(ex.scale,ex.fmt==='jpeg');
-  ex.url=el.toDataURL(ex.fmt==='jpeg'?'image/jpeg':'image/png',.92);
-  $('#exImg').src=ex.url;$('#exDim').textContent=`${el.width} × ${el.height} px`;
+  const blob=await new Promise(r=>el.toBlob(r,exType(),.9));
+  if(job!==ex.job||!blob)return;
+  if(ex.url)URL.revokeObjectURL(ex.url);
+  ex.blob=blob;ex.url=URL.createObjectURL(blob);ex.w=el.width;ex.h=el.height;
+  $('#exImg').src=ex.url;
+  $('#exDim').textContent=`${el.width} × ${el.height} px · ${blob.size>=1048576?(blob.size/1048576).toFixed(1)+' MB':Math.max(1,Math.round(blob.size/1024))+' KB'}`;
+  $('#exDl').disabled=false;$('#exCopy').disabled=false;
 }
 function openExport(note){
   const n=$('#exNote');n.hidden=!note;n.textContent=note||'';
-  $('#exModal').hidden=false;renderExport();$('#exDl').focus();
+  if(!ex.chosen){ex.fmt=canvas.getObjects().some(o=>o.kind==='image'&&o.visible)?'jpeg':'png';setSeg('#exFmt',ex.fmt);}
+  $('#exModal').hidden=false;renderExport();
 }
 async function copyImage(){
   try{
@@ -858,19 +872,32 @@ async function copyImage(){
     const el=exportEl(1,false);
     const blob=new Promise(res=>el.toBlob(res,'image/png'));
     await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
-    toast('คัดลอกรูปแล้ว ไปกด Ctrl+V ในไลน์ได้เลย');
-  }catch(e){openExport('หน้านี้คัดลอกรูปอัตโนมัติไม่ได้ ให้คลิกขวาที่รูปด้านล่าง แล้วเลือก "คัดลอกรูปภาพ"');}
+    toast(TOUCH?'คัดลอกรูปแล้ว ไปกดค้างในช่องแชตไลน์แล้วเลือกวาง':'คัดลอกรูปแล้ว ไปกด Ctrl+V ในไลน์ได้เลย');
+  }catch(e){openExport(TOUCH?'คัดลอกอัตโนมัติไม่ได้ ให้กดค้างที่รูปด้านล่าง แล้วเลือก "คัดลอก"':'หน้านี้คัดลอกรูปอัตโนมัติไม่ได้ ให้คลิกขวาที่รูปด้านล่าง แล้วเลือก "คัดลอกรูปภาพ"');}
 }
 let dlApi;
 const getDownloads=()=>{if(dlApi===undefined)dlApi=(window.claude&&window.claude.use)?window.claude.use('downloads').catch(()=>null):Promise.resolve(null);return dlApi;};
-async function download(){
-  const name=fileName();
-  const api=await getDownloads();
-  if(api){
-    const blob=await new Promise(res=>exportEl(ex.scale,ex.fmt==='jpeg').toBlob(res,ex.fmt==='jpeg'?'image/jpeg':'image/png',.92));
-    try{await api.save({filename:name,data:blob});toast('บันทึกรูปแล้ว');}
-    catch(e){if(e&&e.code==='declined')return;toast(e&&e.code==='rate_limited'?'มีหน้าต่างบันทึกเปิดอยู่ ลองใหม่อีกครั้ง':'บันทึกไม่ได้ ให้คลิกขวาที่รูปแล้วเลือก "บันทึกรูปภาพเป็น…"');}
-    return;
+function download(){
+  if(!ex.blob)return;
+  const name=fileName(),blob=ex.blob;
+  // Phones: open the share sheet straight away (Save Image / LINE). Must run inside the tap, before any await.
+  if(TOUCH&&navigator.canShare&&window.File){
+    const file=new File([blob],name,{type:blob.type});
+    if(navigator.canShare({files:[file]})){
+      navigator.share({files:[file]}).catch(e=>{if(e&&e.name!=='AbortError')saveBlob(name,blob);});
+      return;
+    }
+  }
+  saveBlob(name,blob);
+}
+async function saveBlob(name,blob){
+  if(window.claude&&window.claude.use){
+    const api=await getDownloads();
+    if(api){
+      try{await api.save({filename:name,data:blob});toast('บันทึกรูปแล้ว');}
+      catch(e){if(e&&e.code==='declined')return;toast(e&&e.code==='rate_limited'?'มีหน้าต่างบันทึกเปิดอยู่ ลองใหม่อีกครั้ง':'บันทึกไม่ได้ ให้คลิกขวาที่รูปแล้วเลือก "บันทึกรูปภาพเป็น…"');}
+      return;
+    }
   }
   const a=document.createElement('a');a.href=ex.url;a.download=name;document.body.appendChild(a);a.click();a.remove();
 }
@@ -982,7 +1009,7 @@ function wire(){
   $('#bCopy').onclick=copyImage;$('#bExport').onclick=()=>openExport();
   $('#bStartFresh').onclick=doClear;$('#bBannerX').onclick=()=>{$('#banner').hidden=true;};
   $('#exModal').addEventListener('click',e=>{if(e.target.id==='exModal'||e.target.closest('[data-close]'))$('#exModal').hidden=true;});
-  $('#exFmt').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ex.fmt=b.dataset.v;$('#exFmt').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderExport();});
+  $('#exFmt').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ex.fmt=b.dataset.v;ex.chosen=true;$('#exFmt').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderExport();});
   $('#exScale').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ex.scale=+b.dataset.v;$('#exScale').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderExport();});
   $('#exDl').onclick=download;$('#exCopy').onclick=()=>{$('#exModal').hidden=true;copyImage();};
 
@@ -1079,6 +1106,7 @@ async function buildSample(){
 
 /* ---------- boot ---------- */
 async function boot(){
+  if(TOUCH){$('#exHint').innerHTML='กดปุ่ม <b>บันทึก / แชร์</b> แล้วเลือก <b>บันทึกรูปภาพ</b> หรือส่งเข้าไลน์ได้เลย หรือกดค้างที่รูปด้านบน';$('#exDl').textContent='บันทึก / แชร์';}
   buildRail();wire();setTool('select');fitZoom();
   try{await Promise.race([Promise.all([document.fonts.load(`700 40px "${FONT}"`,'ก'),document.fonts.load(`600 40px "${FONT}"`,'ก')]),new Promise(r=>setTimeout(r,2500))]);}catch(e){}
   fabric.util.clearFabricFontCache();
