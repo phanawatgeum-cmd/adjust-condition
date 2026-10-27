@@ -117,6 +117,8 @@ button{font-family:inherit;color:inherit}
 .tile svg{width:100%;height:auto;display:block}
 .tile:hover{border-color:var(--muted);color:var(--fg)}
 .tile.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.tiles.dims .tile{font-size:10.5px;gap:4px;padding:8px 2px 6px}
+.tiles.dims svg{width:26px;height:26px}
 .tiles.sizes{grid-template-columns:repeat(3,1fr)}
 .tiles.sizes .tile{padding:8px 4px;font-size:12px}
 .tiles.sizes .tile small{font-size:10.5px;opacity:.8;font-variant-numeric:tabular-nums}
@@ -239,7 +241,7 @@ const FONT='IBM Plex Sans Thai';
 const FONT_STACK='"IBM Plex Sans Thai", Tahoma, "Leelawadee UI", sans-serif';
 const SEL='#12A398';
 const COLORS=['#FF3B30','#FF9500','#FFCC00','#34C759','#00A3FF','#5856D6','#FF2D92','#FFFFFF','#111111'];
-const PROPS=['kind','baseColor','fillMode','txtStyle','bgPad','num','magId','magShape','magZoom','magMult','slotIndex','empty','heads','outline','selectable','evented','hasControls','hoverCursor','lockMovementX','lockMovementY','lockRotation','strokeUniform','objectCaching','excludeFromExport'];
+const PROPS=['kind','baseColor','fillMode','txtStyle','bgPad','num','magId','magShape','magZoom','magMult','dimId','dimType','dimOff','textFs','textW','slotIndex','empty','heads','outline','selectable','evented','hasControls','hoverCursor','lockMovementX','lockMovementY','lockRotation','strokeUniform','objectCaching','excludeFromExport'];
 const TEMPLATES={
   two_h:[[0,0,.5,1],[.5,0,.5,1]],
   two_v:[[0,0,1,.5],[0,.5,1,.5]],
@@ -256,7 +258,7 @@ const TEMPLATES={
 const SIZES=[['1:1',1080,1080],['4:3',1600,1200],['3:4',1200,1600],['16:9',1920,1080],['9:16',1080,1920],['A4 นอน',1754,1240]];
 
 let W=1600,H=1200,zoom=1,autoFit=true,tool='select';
-const st={color:'#FF3B30',width:8,textSize:56,textStyle:'outline',fill:'none',heads:'end',outline:true,badgeSize:64,magShape:'rect',magZoom:2.5};
+const st={dimType:'linear',color:'#FF3B30',width:8,textSize:56,textStyle:'outline',fill:'none',heads:'end',outline:true,badgeSize:64,magShape:'rect',magZoom:2.5};
 const layout={tpl:null,gap:16,pad:16,radius:0};
 let muted=false,loading=false,cropping=null,drawing=null,pickSlot=null,cascade=0;
 
@@ -279,7 +281,7 @@ fabric.Object.prototype.set({originX:'center',originY:'center',transparentCorner
 // Arrow / line with endpoint handles
 function lineAbs(o){const p=o.calcLinePoints(),m=o.calcTransformMatrix();return[fabric.util.transformPoint(new fabric.Point(p.x1,p.y1),m),fabric.util.transformPoint(new fabric.Point(p.x2,p.y2),m)];}
 function endCtl(i){return new fabric.Control({cursorStyle:'move',actionName:'modifyLine',
-  positionHandler(dim,fm,o){const p=o.calcLinePoints();return fabric.util.transformPoint(new fabric.Point(i?p.x2:p.x1,i?p.y2:p.y1),fabric.util.multiplyTransformMatrices(o.canvas.viewportTransform,o.calcTransformMatrix()));},
+  positionHandler(dim,fm,o){const p=o.calcLinePoints();return fabric.util.transformPoint(new fabric.Point(i?p.x2:p.x1,i?p.y2:p.y1),fabric.util.multiplyTransformMatrices((o.canvas||canvas).viewportTransform,o.calcTransformMatrix()));},
   actionHandler(e,t,x,y){const o=t.target;const[a,b]=lineAbs(o);const q=i?b:a;const other=i?a:b;let nx=x,ny=y;if(e.shiftKey){const ang=Math.atan2(y-other.y,x-other.x),len=Math.hypot(x-other.x,y-other.y),s=Math.round(ang/(Math.PI/4))*(Math.PI/4);nx=other.x+Math.cos(s)*len;ny=other.y+Math.sin(s)*len;}q.x=nx;q.y=ny;o.set({angle:0,scaleX:1,scaleY:1,skewX:0,skewY:0,flipX:false,flipY:false});o.set({x1:a.x,y1:a.y,x2:b.x,y2:b.y});o.setCoords();return true;},
   render(ctx,left,top){const r=7/zoom;ctx.save();ctx.fillStyle='#fff';ctx.strokeStyle=SEL;ctx.lineWidth=2.2/zoom;ctx.beginPath();ctx.arc(left,top,r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();}
 });}
@@ -346,6 +348,135 @@ fabric.Slot=fabric.util.createClass(fabric.Rect,{
 });
 fabric.Slot.fromObject=function(o,cb){fabric.Object._fromObject('Slot',o,cb);};
 
+
+// Dimension lines (CAD-style): geometry only, the value is typed by the user in a linked text box
+const DIM_TYPES=[
+  ['linear','Linear','แนวนอน/แนวตั้ง','<path d="M4 5v14M20 5v14M4 9h16"/><path d="M7.5 7L4 9l3.5 2M16.5 7L20 9l-3.5 2" stroke-linejoin="round"/>'],
+  ['aligned','Aligned','ตามแนวเส้น','<path d="M3.5 12.5l8-8M11.5 20.5l8-8M6 16l9.5-9.5"/><path d="M6 12.6V16h3.4M15.5 10V6.6h-3.4" stroke-linejoin="round"/>'],
+  ['angular','Angular','มุม','<path d="M4 20h16M4 20L14 5"/><path d="M15 20a11 11 0 0 0-5.2-9.3"/>'],
+  ['arc','Arc Length','ความยาวโค้ง','<path d="M4 20A16 16 0 0 1 20 4"/><path d="M8 20A12 12 0 0 1 20 8" stroke-dasharray="2 2.2"/><path d="M15.5 4.5l3 2"/>'],
+  ['radius','Radius','รัศมี','<circle cx="12" cy="12" r="8.5"/><path d="M12 12l5.2-5.2"/><path d="M14.3 6.6h3v3"/>'],
+  ['diameter','Diameter','เส้นผ่านศูนย์กลาง','<circle cx="12" cy="12" r="8.5"/><path d="M6 18L18 6"/><path d="M15 6h3v3M9 18H6v-3"/>'],
+  ['ordinate','Ordinate','พิกัด','<path d="M5 20V11M5 20h9"/><path d="M15 4v4l3 3v3"/><circle cx="15" cy="4" r="1.2" fill="currentColor"/>'],
+  ['jogged','Jogged','รัศมีแบบหัก','<path d="M4 20A16 16 0 0 1 20 4"/><path d="M6 18l4.5-4.5 1 2.5 4-4-1-2.5 3-3"/>']
+];
+const needs3=t=>t==='linear'||t==='aligned'||t==='angular'||t==='arc';
+const DIM_PREFIX={radius:'R',jogged:'R',diameter:'Ø',arc:'⌒'};
+function dimGeom(type,P,sw,fs,tw){
+  tw=tw||fs*2.6;
+  const g={segs:[],polys:[],arcs:[],heads:[],marks:[],dots:[],anchor:{x:0,y:0}};
+  const V=(x,y)=>({x,y}),sub=(a,b)=>V(a.x-b.x,a.y-b.y),add=(a,b)=>V(a.x+b.x,a.y+b.y),mul=(a,k)=>V(a.x*k,a.y*k),len=a=>Math.hypot(a.x,a.y),nrm=a=>{const l=len(a)||1;return V(a.x/l,a.y/l);},mid=(a,b)=>V((a.x+b.x)/2,(a.y+b.y)/2),lerp=(a,b,k)=>V(a.x+(b.x-a.x)*k,a.y+(b.y-a.y)*k);
+  const upN=u=>{let n=V(-u.y,u.x);if(n.y>0||(n.y===0&&n.x>0))n=mul(n,-1);return n;};
+  const p0=P[0],p1=P[1],p2=P[2]||P[1];
+  const gap=Math.max(3,sw*1.2),over=Math.max(8,sw*2.5),off=fs*.78,hl=Math.max(12,sw*3.6);
+  const clr=n=>Math.abs(n.x)*tw/2+Math.abs(n.y)*fs*.62+sw+6;
+  const ext=(q,f)=>{const v=sub(f,q),L=len(v);if(L<1)return;const u=mul(v,1/L),s=Math.min(gap,L*.5);g.segs.push([q.x+u.x*s,q.y+u.y*s,f.x+u.x*over,f.y+u.y*over]);};
+  const line=(a,b,headA,headB)=>{const u=nrm(sub(b,a)),L=len(sub(b,a)),ka=headA&&L>hl*1.2?hl*.5:0,kb=headB&&L>hl*1.2?hl*.5:0;g.segs.push([a.x+u.x*ka,a.y+u.y*ka,b.x-u.x*kb,b.y-u.y*kb]);if(headA)g.heads.push({x:a.x,y:a.y,dx:-u.x,dy:-u.y});if(headB)g.heads.push({x:b.x,y:b.y,dx:u.x,dy:u.y});return u;};
+  const arcHeads=(c,R,a0,dl)=>{g.arcs.push({c,R,a0,a1:a0+dl,ccw:dl<0});const s=Math.sign(dl)||1,e=a0+dl;g.heads.push({x:c.x+R*Math.cos(a0),y:c.y+R*Math.sin(a0),dx:Math.sin(a0)*s,dy:-Math.cos(a0)*s},{x:c.x+R*Math.cos(e),y:c.y+R*Math.sin(e),dx:-Math.sin(e)*s,dy:Math.cos(e)*s});};
+  switch(type){
+    case 'linear':{
+      const minx=Math.min(p0.x,p1.x),maxx=Math.max(p0.x,p1.x),miny=Math.min(p0.y,p1.y),maxy=Math.max(p0.y,p1.y);
+      let h;if(p2.x>=minx&&p2.x<=maxx)h=true;else if(p2.y>=miny&&p2.y<=maxy)h=false;else h=Math.abs(p1.x-p0.x)>=Math.abs(p1.y-p0.y);
+      if(h){const a=V(p0.x,p2.y),b=V(p1.x,p2.y);ext(p0,a);ext(p1,b);line(a,b,true,true);g.anchor=add(mid(a,b),V(0,(Math.sign(p2.y-(p0.y+p1.y)/2)||-1)*off));}
+      else{const a=V(p2.x,p0.y),b=V(p2.x,p1.y);ext(p0,a);ext(p1,b);line(a,b,true,true);g.anchor=add(mid(a,b),V((Math.sign(p2.x-(p0.x+p1.x)/2)||-1)*clr(V(1,0)),0));}
+      break;}
+    case 'aligned':{
+      const u=nrm(sub(p1,p0)),n=V(-u.y,u.x),d=(p2.x-p0.x)*n.x+(p2.y-p0.y)*n.y,a=add(p0,mul(n,d)),b=add(p1,mul(n,d));
+      ext(p0,a);ext(p1,b);line(a,b,true,true);g.anchor=add(mid(a,b),mul(n,(Math.sign(d)||1)*clr(n)));break;}
+    case 'angular':{
+      const r1=sub(p1,p0),r2=sub(p2,p0),R=Math.max(12,.62*Math.min(len(r1),len(r2))),a1=Math.atan2(r1.y,r1.x);
+      let dl=Math.atan2(r2.y,r2.x)-a1;while(dl>Math.PI)dl-=2*Math.PI;while(dl<=-Math.PI)dl+=2*Math.PI;
+      g.segs.push([p0.x,p0.y,p1.x,p1.y],[p0.x,p0.y,p2.x,p2.y]);arcHeads(p0,R,a1,dl);
+      const am=a1+dl/2;g.anchor=add(p0,V(Math.cos(am)*(R+fs*1.25),Math.sin(am)*(R+fs*1.25)));break;}
+    case 'arc':{
+      const ax=p0.x,ay=p0.y,bx=p2.x,by=p2.y,cx=p1.x,cy=p1.y,dd=2*(ax*(by-cy)+bx*(cy-ay)+cx*(ay-by)),L=len(sub(p1,p0));
+      if(Math.abs(dd)<1e-3*L*L||L<1){line(p0,p1,true,true);{const n=upN(nrm(sub(p1,p0)));g.anchor=add(mid(p0,p1),mul(n,clr(n)));}break;}
+      const a2=ax*ax+ay*ay,b2=bx*bx+by*by,c2=cx*cx+cy*cy,c=V((a2*(by-cy)+b2*(cy-ay)+c2*(ay-by))/dd,(a2*(cx-bx)+b2*(ax-cx)+c2*(bx-ax))/dd),R=len(sub(p0,c));
+      const ang=q=>Math.atan2(q.y-c.y,q.x-c.x),tw=x=>((x%(2*Math.PI))+2*Math.PI)%(2*Math.PI),a0=ang(p0);
+      let dl=tw(ang(p1)-a0);if(tw(ang(p2)-a0)>dl)dl-=2*Math.PI;
+      arcHeads(c,R,a0,dl);{const n=nrm(sub(p2,c));g.anchor=add(p2,mul(n,clr(n)));}break;}
+    case 'radius':{const u=line(p0,p1,false,true),n=upN(u);g.marks.push(p0);g.anchor=add(mid(p0,p1),mul(n,clr(n)));break;}
+    case 'diameter':{const u=line(p0,p1,true,true),m=mid(p0,p1);g.marks.push(m);{const n=upN(u);g.anchor=add(lerp(p0,p1,.27),mul(n,clr(n)));}break;}
+    case 'ordinate':{
+      const d=sub(p1,p0),vert=Math.abs(d.y)>=Math.abs(d.x);
+      const q1=vert?V(p0.x,p0.y+d.y/3):V(p0.x+d.x/3,p0.y),q2=vert?V(p1.x,p0.y+2*d.y/3):V(p0.x+2*d.x/3,p1.y);
+      const s0=add(p0,mul(nrm(sub(q1,p0)),gap*1.5));g.polys.push([s0,q1,q2,p1]);g.dots.push(p0);
+      g.anchor=vert?add(p1,V(0,(Math.sign(d.y)||1)*(fs*.62+sw+6))):add(p1,V((Math.sign(d.x)||1)*(tw/2+sw+8),0));break;}
+    case 'jogged':{
+      const u=nrm(sub(p1,p0)),n=V(-u.y,u.x),L=len(sub(p1,p0)),j=Math.max(8,sw*2.6),at=k=>add(p0,mul(u,L*k));
+      const end=sub(p1,mul(u,Math.min(hl*.5,L*.2)));
+      g.polys.push([p0,at(.38),add(at(.46),mul(n,j)),add(at(.54),mul(n,-j)),at(.62),end]);
+      g.heads.push({x:p1.x,y:p1.y,dx:u.x,dy:u.y});g.marks.push(p0);{const n2=upN(u);g.anchor=add(at(.8),mul(n2,clr(n2)));}break;}
+  }
+  return g;
+}
+function paintDim(ctx,g,color,sw,ext){
+  ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=sw+ext*2;
+  ctx.beginPath();
+  g.segs.forEach(s=>{ctx.moveTo(s[0],s[1]);ctx.lineTo(s[2],s[3]);});
+  g.polys.forEach(p=>p.forEach((q,i)=>i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y)));
+  const k=Math.max(7,sw*2.6);g.marks.forEach(m=>{ctx.moveTo(m.x-k,m.y);ctx.lineTo(m.x+k,m.y);ctx.moveTo(m.x,m.y-k);ctx.lineTo(m.x,m.y+k);});
+  ctx.stroke();
+  g.arcs.forEach(a=>{ctx.beginPath();ctx.arc(a.c.x,a.c.y,a.R,a.a0,a.a1,a.ccw);ctx.stroke();});
+  const hl=Math.max(12,sw*3.6),hw=hl*.36;
+  g.heads.forEach(h=>{const bx=h.x-h.dx*hl,by=h.y-h.dy*hl;ctx.beginPath();ctx.moveTo(h.x,h.y);ctx.lineTo(bx-h.dy*hw,by+h.dx*hw);ctx.lineTo(bx+h.dy*hw,by-h.dx*hw);ctx.closePath();ctx.fill();if(ext>0){ctx.lineWidth=ext*2;ctx.stroke();ctx.lineWidth=sw+ext*2;}});
+  g.dots.forEach(d=>{ctx.beginPath();ctx.arc(d.x,d.y,Math.max(3.5,sw*1.3)+ext,0,Math.PI*2);ctx.fill();});
+  ctx.restore();
+}
+fabric.Dim=fabric.util.createClass(fabric.Object,{
+  type:'dim',dimType:'linear',outline:true,objectCaching:false,hasBorders:false,fill:null,stroke:'#FF3B30',strokeWidth:4,textFs:40,
+  initialize(o){o=o||{};this.callSuper('initialize',o);this.pts=(o.pts||[{x:0,y:0},{x:0,y:0},{x:0,y:0}]).map(p=>({x:p.x,y:p.y}));},
+  setAbs(A){
+    const n=needs3(this.dimType)?3:2,U=A.slice(0,n),xs=U.map(p=>p.x),ys=U.map(p=>p.y);
+    const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),c={x:(minX+maxX)/2,y:(minY+maxY)/2};
+    this.set({left:c.x,top:c.y,width:Math.max(1,maxX-minX),height:Math.max(1,maxY-minY),angle:0,scaleX:1,scaleY:1,skewX:0,skewY:0,flipX:false,flipY:false});
+    this.pts=[0,1,2].map(i=>{const p=A[i]||A[n-1];return{x:p.x-c.x,y:p.y-c.y};});this.setCoords();
+  },
+  absPts(){const m=this.calcTransformMatrix();return this.pts.map(p=>{const q=fabric.util.transformPoint(new fabric.Point(p.x,p.y),m);return{x:q.x,y:q.y};});},
+  _render(ctx){
+    const sw=this.strokeWidth||1,g=dimGeom(this.dimType,this.pts,sw,this.textFs||40,this.textW);
+    if(this.outline)paintDim(ctx,g,haloFor(this.stroke),sw,Math.max(2.5,sw*.38));
+    paintDim(ctx,g,this.stroke,sw,0);
+  },
+  toObject(pp){return this.callSuper('toObject',['pts','dimType','outline','textFs','textW'].concat(pp||[]));}
+});
+fabric.Dim.fromObject=function(o,cb){fabric.Object._fromObject('Dim',o,cb);};
+function dimCtl(i){return new fabric.Control({cursorStyle:'move',actionName:'modifyDim',
+  positionHandler(dim,fm,o){const p=o.pts[i];return fabric.util.transformPoint(new fabric.Point(p.x,p.y),fabric.util.multiplyTransformMatrices((o.canvas||canvas).viewportTransform,o.calcTransformMatrix()));},
+  actionHandler(e,t,x,y){const o=t.target,A=o.absPts();let nx=x,ny=y;
+    if(e.shiftKey&&i<2){const q=A[1-i],ang=Math.atan2(y-q.y,x-q.x),l=Math.hypot(x-q.x,y-q.y),s=Math.round(ang/(Math.PI/4))*(Math.PI/4);nx=q.x+Math.cos(s)*l;ny=q.y+Math.sin(s)*l;}
+    A[i]={x:nx,y:ny};o.setAbs(A);syncDimText(o);return true;},
+  render(ctx,left,top){const r=7/zoom;ctx.save();ctx.fillStyle=i===2?SEL:'#fff';ctx.strokeStyle=i===2?'#fff':SEL;ctx.lineWidth=2.2/zoom;ctx.beginPath();if(i===2)ctx.rect(left-r,top-r,r*2,r*2);else ctx.arc(left,top,r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();}
+});}
+fabric.Dim.prototype.controls={p0:dimCtl(0),p1:dimCtl(1),p2:dimCtl(2)};
+function dimDefaultP2(type,s,e){
+  const dx=e.x-s.x,dy=e.y-s.y,L=Math.hypot(dx,dy)||1,m={x:(s.x+e.x)/2,y:(s.y+e.y)/2},off=Math.max(30,L*.2);
+  if(type==='linear')return Math.abs(dx)>=Math.abs(dy)?{x:m.x,y:Math.min(s.y,e.y)-off}:{x:Math.min(s.x,e.x)-off,y:m.y};
+  let n={x:-dy/L,y:dx/L};if(n.y>0||(n.y===0&&n.x>0))n={x:-n.x,y:-n.y};
+  if(type==='aligned')return{x:m.x+n.x*off,y:m.y+n.y*off};
+  if(type==='arc')return{x:m.x+n.x*L*.25,y:m.y+n.y*L*.25};
+  if(type==='angular'){const a=-Math.PI/3,c=Math.cos(a),sn=Math.sin(a);return{x:s.x+dx*c-dy*sn,y:s.y+dx*sn+dy*c};}
+  return{x:e.x,y:e.y};
+}
+const dimText=id=>canvas.getObjects().find(o=>o.kind==='text'&&o.dimId&&o.dimId===id);
+const dimOf=id=>canvas.getObjects().find(o=>o.type==='dim'&&o.dimId===id);
+function dimAnchorAbs(d){const g=dimGeom(d.dimType,d.pts,d.strokeWidth||1,d.textFs||40,d.textW);return fabric.util.transformPoint(new fabric.Point(g.anchor.x,g.anchor.y),d.calcTransformMatrix());}
+function syncDimText(d){const t=dimText(d.dimId);if(!t||t.group)return;d.textW=t.width*Math.abs(t.scaleX)+(t.bgPad?2*t.bgPad*t.fontSize:0);const a=dimAnchorAbs(d),o=t.dimOff||{x:0,y:0};t.set({left:a.x+o.x,top:a.y+o.y});t.setCoords();}
+function rememberDimOff(t){if(t.group||!t.dimId)return;const d=dimOf(t.dimId);if(!d)return;const a=dimAnchorAbs(d);t.dimOff={x:t.left-a.x,y:t.top-a.y};}
+function addDimText(d){
+  let pre=DIM_PREFIX[d.dimType]||'';
+  if(d.dimType==='ordinate'){const A=d.absPts();pre=Math.abs(A[1].y-A[0].y)>=Math.abs(A[1].x-A[0].x)?'X ':'Y ';}
+  const suf=d.dimType==='angular'?'°':'',val='0.00',a=dimAnchorAbs(d);
+  const t=new fabric.IText(pre+val+suf,{left:a.x,top:a.y,fontFamily:FONT_STACK,fontWeight:700,fontSize:d.textFs,textAlign:'center',lineHeight:1.18,kind:'text',dimId:d.dimId,dimOff:{x:0,y:0}});
+  applyTextStyle(t,'outline',d.baseColor||d.stroke);
+  canvas.add(t);syncDimText(d);canvas.setActiveObject(t);t.enterEditing();t.setSelectionStart(pre.length);t.setSelectionEnd(pre.length+val.length);canvas.requestRenderAll();
+}
+function convertDim(d,type){
+  const A=d.absPts(),was3=needs3(d.dimType);d.dimType=type;
+  if(needs3(type)&&!was3)A[2]=dimDefaultP2(type,A[0],A[1]);
+  d.setAbs(A);decorate(d);syncDimText(d);d.dirty=true;
+}
+
 // Rounded padded background for label-style text
 const baseBg=fabric.Object.prototype._renderBackground;
 fabric.IText.prototype._renderBackground=function(ctx){
@@ -386,11 +517,13 @@ function decorate(o){
   if(k==='magSrc'){o.setControlsVisibility({mtr:false});o.lockRotation=true;}
   if(k==='slot'){o.selectable=false;o.hoverCursor='pointer';o.hasControls=false;}
   if(k==='magLink'){o.selectable=false;o.evented=false;}
+  if(o.type==='dim')o.setControlsVisibility({p2:needs3(o.dimType)});
 }
 function setColor(o,c){
   o.baseColor=c;
   switch(o.kind){
     case 'arrow':case 'line':case 'pen':o.set('stroke',c);break;
+    case 'dim':{o.set('stroke',c);const t=dimText(o.dimId);if(t)applyTextStyle(t,t.txtStyle,c);break;}
     case 'rect':case 'ellipse':o.set({stroke:c,fill:fillFor(o.fillMode,c)});break;
     case 'highlight':o.set('fill',rgba(c,.38));break;
     case 'text':applyTextStyle(o,o.txtStyle,c);break;
@@ -401,7 +534,7 @@ function setColor(o,c){
 }
 function getWidth(o){if(!o)return st.width;if(o.kind==='magView')return o.magBorder;if(o.kind==='magSrc')return o.strokeWidth;return o.strokeWidth||st.width;}
 function setWidth(o,w){
-  if(['arrow','line','rect','ellipse','pen'].includes(o.kind))o.set('strokeWidth',w);
+  if(['arrow','line','rect','ellipse','pen','dim'].includes(o.kind))o.set('strokeWidth',w);
   if(o.kind==='magSrc'||o.kind==='magView')setMagStyle(o.magId,{width:w});
   o.dirty=true;
 }
@@ -668,6 +801,7 @@ const TOOLS=[
   ['line','เส้นตรง','L','<path d="M5 19L19 5"/>'],
   ['rect','กรอบสี่เหลี่ยม','R','<rect x="4" y="6" width="16" height="12" rx="1.5"/>'],
   ['ellipse','วงกลม','O','<ellipse cx="12" cy="12" rx="8.5" ry="6.5"/>'],
+  ['dim','เส้นบอกขนาด','D','<path d="M4 5v14M20 5v14M4 12h16"/><path d="M7.5 10L4 12l3.5 2M16.5 10L20 12l-3.5 2" stroke-linejoin="round"/>'],
   ['pen','ปากกา','P','<path d="M4 20l1.2-4.2L16.5 4.5a2.1 2.1 0 013 3L8.2 18.8z"/><path d="M14.5 6.5l3 3"/>'],
   ['number','ตัวเลขลำดับ','N','<circle cx="12" cy="12" r="8.5"/><path d="M10.5 9.2l2-1.2v8"/>'],
   '-',
@@ -675,9 +809,10 @@ const TOOLS=[
   ['mosaic','เบลอ/โมเสก','B','<rect x="4" y="4" width="5.3" height="5.3"/><rect x="14.7" y="4" width="5.3" height="5.3"/><rect x="9.35" y="9.35" width="5.3" height="5.3"/><rect x="4" y="14.7" width="5.3" height="5.3"/><rect x="14.7" y="14.7" width="5.3" height="5.3"/>'],
   ['magnify','ซูมขยายจุด','Z','<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/>']
 ];
-const TOOLKIND={text:'text',arrow:'arrow',line:'line',rect:'rect',ellipse:'ellipse',pen:'pen',number:'badge',highlight:'highlight',mosaic:'mosaic',magnify:'magView'};
-const NAMES={text:'ข้อความ',arrow:'ลูกศร',line:'เส้นตรง',rect:'กรอบสี่เหลี่ยม',ellipse:'วงกลม',pen:'เส้นปากกา',badge:'ตัวเลขลำดับ',highlight:'ไฮไลต์',mosaic:'โมเสก',magView:'ซูมขยายจุด',magSrc:'ซูมขยายจุด',image:'รูปภาพ'};
+const TOOLKIND={dim:'dim',text:'text',arrow:'arrow',line:'line',rect:'rect',ellipse:'ellipse',pen:'pen',number:'badge',highlight:'highlight',mosaic:'mosaic',magnify:'magView'};
+const NAMES={dim:'เส้นบอกขนาด',text:'ข้อความ',arrow:'ลูกศร',line:'เส้นตรง',rect:'กรอบสี่เหลี่ยม',ellipse:'วงกลม',pen:'เส้นปากกา',badge:'ตัวเลขลำดับ',highlight:'ไฮไลต์',mosaic:'โมเสก',magView:'ซูมขยายจุด',magSrc:'ซูมขยายจุด',image:'รูปภาพ'};
 const HINTS={
+  dim:'ลากจากจุดหนึ่งไปอีกจุด แล้วพิมพ์ตัวเลขเองในกล่องข้อความ ลากจุดสี่เหลี่ยมเพื่อเลื่อนเส้นออกห่าง กล่องข้อความจะเลื่อนตามเส้น',
   text:'คลิกตรงไหนก็ได้เพื่อพิมพ์ ดับเบิลคลิกข้อความเพื่อแก้',
   arrow:'ลากจากจุดเริ่มไปยังจุดที่จะชี้ กด Shift ค้างเพื่อล็อกมุม',
   line:'ลากเพื่อวาดเส้นตรง กด Shift ค้างเพื่อล็อกมุม',
@@ -721,6 +856,7 @@ canvas.on('mouse:down',o=>{
   let obj;
   const base={excludeFromExport:true};
   if(tool==='arrow'||tool==='line')obj=new fabric.Arrow([p.x,p.y,p.x,p.y],Object.assign({stroke:st.color,strokeWidth:st.width,heads:tool==='line'?'none':st.heads,outline:st.outline,kind:tool,baseColor:st.color},base));
+  else if(tool==='dim'){obj=new fabric.Dim(Object.assign({stroke:st.color,strokeWidth:st.width,dimType:st.dimType,outline:st.outline,kind:'dim',baseColor:st.color,textFs:Math.round(st.textSize*.75)},base));obj.setAbs([p,p,p]);}
   else if(tool==='rect')obj=new fabric.Rect(Object.assign({left:p.x,top:p.y,width:1,height:1,rx:4,ry:4,fill:fillFor(st.fill,st.color),fillMode:st.fill,stroke:st.color,strokeWidth:st.width,strokeUniform:true,kind:'rect',baseColor:st.color},base));
   else if(tool==='ellipse')obj=new fabric.Ellipse(Object.assign({left:p.x,top:p.y,rx:1,ry:1,fill:fillFor(st.fill,st.color),fillMode:st.fill,stroke:st.color,strokeWidth:st.width,strokeUniform:true,kind:'ellipse',baseColor:st.color},base));
   else if(tool==='highlight')obj=new fabric.Rect(Object.assign({left:p.x,top:p.y,width:1,height:1,fill:rgba(st.color,.38),strokeWidth:0,kind:'highlight',baseColor:st.color},base));
@@ -730,6 +866,7 @@ canvas.on('mouse:down',o=>{
 canvas.on('mouse:move',o=>{
   if(!drawing)return;
   const p=canvas.getPointer(o.e),d=drawing,obj=d.obj;let x=p.x,y=p.y;
+  if(obj.type==='dim'){const s={x:d.sx,y:d.sy};if(o.e.shiftKey){const ang=Math.atan2(y-d.sy,x-d.sx),len=Math.hypot(x-d.sx,y-d.sy),sn=Math.round(ang/(Math.PI/4))*(Math.PI/4);x=d.sx+Math.cos(sn)*len;y=d.sy+Math.sin(sn)*len;}const e={x,y};obj.setAbs([s,e,dimDefaultP2(obj.dimType,s,e)]);canvas.requestRenderAll();return;}
   if(obj.type==='arrow'){
     if(o.e.shiftKey){const ang=Math.atan2(y-d.sy,x-d.sx),len=Math.hypot(x-d.sx,y-d.sy),s=Math.round(ang/(Math.PI/4))*(Math.PI/4);x=d.sx+Math.cos(s)*len;y=d.sy+Math.sin(s)*len;}
     obj.set({x1:d.sx,y1:d.sy,x2:x,y2:y});
@@ -745,6 +882,7 @@ canvas.on('mouse:move',o=>{
 canvas.on('mouse:up',()=>{
   if(!drawing)return;
   const{obj}=drawing;drawing=null;
+  if(obj.type==='dim'){const A=obj.absPts();if(Math.hypot(A[1].x-A[0].x,A[1].y-A[0].y)<8){muted=true;canvas.remove(obj);muted=false;canvas.requestRenderAll();return;}obj.excludeFromExport=false;obj.dimId='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);decorate(obj);setTool('select');addDimText(obj);save();updatePanel();return;}
   const w=obj.type==='arrow'?Math.hypot(obj.x2-obj.x1,obj.y2-obj.y1):obj.type==='ellipse'?obj.rx*2:obj.width;
   const h=obj.type==='arrow'?w:obj.type==='ellipse'?obj.ry*2:obj.height;
   const r={x:obj.left-(obj.width||0)/2,y:obj.top-(obj.height||0)/2,w:obj.width,h:obj.height};
@@ -758,7 +896,7 @@ canvas.on('mouse:up',()=>{
 canvas.on('path:created',e=>{e.path.set({kind:'pen',baseColor:st.color,strokeLineCap:'round',strokeLineJoin:'round'});save();syncUI();});
 
 /* ---------- object events ---------- */
-function liveMag(t){if(!t)return;const objs=t.type==='activeSelection'?t.getObjects():[t];new Set(objs.filter(o=>o.magId).map(o=>o.magId)).forEach(updateLink);}
+function liveMag(t){if(!t)return;const objs=t.type==='activeSelection'?t.getObjects():[t];new Set(objs.filter(o=>o.magId).map(o=>o.magId)).forEach(updateLink);objs.filter(o=>o.type==='dim').forEach(d=>{const tx=dimText(d.dimId);if(tx&&!objs.includes(tx))syncDimText(d);});}
 canvas.on('object:moving',e=>liveMag(e.target));
 canvas.on('object:scaling',e=>liveMag(e.target));
 canvas.on('object:rotating',e=>liveMag(e.target));
@@ -766,6 +904,7 @@ canvas.on('object:modified',e=>{
   const t=e.target;if(!t)return;
   if(t.kind==='cropRect')return;
   liveMag(t);
+  if(t.kind==='text'&&t.dimId)rememberDimOff(t);
   const objs=t.type==='activeSelection'?t.getObjects():[t];
   objs.forEach(o=>{
     if(o.kind==='magSrc')scheduleRecap(o.magId,true);
@@ -776,7 +915,7 @@ canvas.on('object:modified',e=>{
   if(objs.length===1&&t.kind==='image'&&t.slotIndex==null&&layout.tpl){const s=slotAt(t.getCenterPoint());if(s&&s.empty){fitToSlot(t,s);s.empty=false;canvas.moveTo(t,getSlots().length);toast('ใส่รูปลงช่องแล้ว');}}
   save();updatePanel();
 });
-canvas.on('text:changed',()=>save());
+canvas.on('text:changed',e=>{const t=e.target;if(t&&t.dimId){const d=dimOf(t.dimId);if(d){syncDimText(d);canvas.requestRenderAll();}}save();});
 canvas.on('text:editing:exited',e=>{const t=e.target;if(t&&!t.text.trim()){canvas.remove(t);}save();syncUI();});
 ['selection:created','selection:updated','selection:cleared'].forEach(ev=>canvas.on(ev,()=>{if(!loading)updatePanel();}));
 canvas.on('object:added',()=>syncUI());canvas.on('object:removed',()=>syncUI());
@@ -786,16 +925,16 @@ function removeSelected(){
   const objs=canvas.getActiveObjects();if(!objs.length)return;
   if(cropping){cancelCrop();return;}
   canvas.discardActiveObject();muted=true;const ids=new Set();
-  objs.forEach(o=>{if(o.kind==='slot')return;if(o.magId){ids.add(o.magId);return;}canvas.remove(o);if(o.slotIndex!=null)markSlotEmpty(o.slotIndex);});
+  objs.forEach(o=>{if(o.kind==='slot')return;if(o.magId){ids.add(o.magId);return;}if(o.type==='dim'){const tx=dimText(o.dimId);if(tx)canvas.remove(tx);}canvas.remove(o);if(o.slotIndex!=null)markSlotEmpty(o.slotIndex);});
   ids.forEach(id=>canvas.getObjects().filter(o=>o.magId===id).forEach(o=>canvas.remove(o)));
   muted=false;canvas.requestRenderAll();save();updatePanel();
 }
 function duplicate(){
-  const objs=canvas.getActiveObjects().filter(o=>!['slot','magSrc','magView','magLink','cropRect'].includes(o.kind));
+  const objs=canvas.getActiveObjects().filter(o=>!['slot','magSrc','magView','magLink','cropRect','dim'].includes(o.kind));
   if(!objs.length){if(canvas.getActiveObject())toast('ส่วนนี้ทำสำเนาไม่ได้ ลองสร้างใหม่แทน');return;}
   canvas.discardActiveObject();const out=[];let n=objs.length;const d=Math.min(W,H)*.02;
   objs.forEach(o=>o.clone(c=>{
-    c.set({left:c.left+d,top:c.top+d});if(c.slotIndex!=null){c.slotIndex=null;c.clipPath=null;}
+    c.set({left:c.left+d,top:c.top+d});if(c.dimId){c.dimId=null;c.dimOff=null;}if(c.slotIndex!=null){c.slotIndex=null;c.clipPath=null;}
     if(c.kind==='badge'){const nn=nextBadgeNum();c.num=nn;c._objects[1].set('text',String(nn));}
     decorate(c);muted=true;canvas.add(c);muted=false;out.push(c);
     if(--n===0){canvas.setActiveObject(out.length>1?new fabric.ActiveSelection(out,{canvas}):out[0]);canvas.requestRenderAll();save();updatePanel();}
@@ -919,7 +1058,7 @@ function boardPanel(){
   const sizes=`<div class="tiles sizes">${SIZES.map(([l,w,h])=>`<button class="tile ${w===W&&h===H?'on':''}" data-act="size" data-v="${w},${h}">${l}<small>${w}×${h}</small></button>`).join('')}</div><div class="custom-size"><input id="cw" type="number" min="100" max="6000" value="${W}" aria-label="กว้าง"><span>×</span><input id="ch" type="number" min="100" max="6000" value="${H}" aria-label="สูง"><button class="btn outline" data-act="size-custom">ใช้</button></div>`;
   const bgs=[['#FFFFFF','ขาว'],['#F1F3F2','เทาอ่อน'],['#1B1F1E','ดำ'],['','โปร่งใส']];
   const bg=`<div class="swatches" style="grid-template-columns:repeat(9,1fr)">${bgs.map(([c,l])=>`<button class="sw ${c?'':'none'} ${eq(canvas.backgroundColor||'',c)?'on':''}" data-act="bg" data-v="${c}" style="--c:${c||'transparent'}" title="${l}" aria-label="พื้นหลัง${l}"></button>`).join('')}</div>${swatches(canvas.backgroundColor||'#ffffff','bg').split('</div>').slice(1).join('</div>').replace('สีอื่น','สีพื้นหลังอื่น')}`;
-  const keys=[['V T A L R O','เลือกเครื่องมือ'],['P N H B Z','ปากกา เลข ไฮไลต์ โมเสก ซูม'],['Ctrl+V','วางรูปจากคลิปบอร์ด'],['Ctrl+Z / Ctrl+Y','ย้อนกลับ / ทำซ้ำ'],['Ctrl+D','ทำสำเนา'],['Delete','ลบที่เลือก'],['ปุ่มลูกศร','ขยับทีละนิด (Shift = 10)'],['Ctrl+Shift+C','คัดลอกรูปไปวางในไลน์'],['Ctrl+S','ส่งออกรูป'],['Ctrl+เลื่อนเมาส์','ซูมมุมมอง']];
+  const keys=[['V T A L R O','เลือกเครื่องมือ'],['P N H B Z','ปากกา เลข ไฮไลต์ โมเสก ซูม'],['D','เส้นบอกขนาด'],['Ctrl+V','วางรูปจากคลิปบอร์ด'],['Ctrl+Z / Ctrl+Y','ย้อนกลับ / ทำซ้ำ'],['Ctrl+D','ทำสำเนา'],['Delete','ลบที่เลือก'],['ปุ่มลูกศร','ขยับทีละนิด (Shift = 10)'],['Ctrl+Shift+C','คัดลอกรูปไปวางในไลน์'],['Ctrl+S','ส่งออกรูป'],['Ctrl+เลื่อนเมาส์','ซูมมุมมอง']];
   return head('กระดาน',`${W} × ${H} px · ${layout.tpl?'เลย์เอาต์ '+TEMPLATES[layout.tpl].length+' ช่อง':'วางอิสระ'}`)
     +sec('เลย์เอาต์รวมรูป',tiles+tune)+sec('ขนาดกระดาน',sizes)+sec('พื้นหลัง',bg)
     +sec('คีย์ลัด',`<div class="keys">${keys.map(([k,v])=>`<kbd>${k}</kbd><span>${v}</span>`).join('')}</div>`);
@@ -934,10 +1073,11 @@ function updatePanel(){
   const ref=objs[0];const one=objs.length===1?ref:null;const has=k=>kinds.has(k);
   const title=objs.length>1?`เลือกไว้ ${objs.length} ชิ้น`:NAMES[[...kinds][0]]||'วัตถุ';
   let h=head(title,objs.length?'':HINTS[tool]);
-  const colorable=['text','arrow','line','rect','ellipse','pen','badge','highlight','magView'];
+  const colorable=['dim','text','arrow','line','rect','ellipse','pen','badge','highlight','magView'];
   if([...kinds].some(k=>colorable.includes(k)))h+=sec('สี',swatches(ref?ref.baseColor||st.color:st.color));
   if(has('text')){const t=objs.find(o=>o.kind==='text');h+=sec('สไตล์ข้อความ',textStyles(t?t.txtStyle:st.textStyle)+range('textSize','ขนาดตัวอักษร',16,240,t?Math.round(t.fontSize*t.scaleY):st.textSize));}
-  if(['arrow','line','rect','ellipse','pen','magView'].some(has))h+=sec('',range('width','ความหนาเส้น',2,40,getWidth(objs.find(o=>['arrow','line','rect','ellipse','pen','magView','magSrc'].includes(o.kind)))));
+  if(['arrow','line','rect','ellipse','pen','magView','dim'].some(has))h+=sec('',range('width','ความหนาเส้น',2,40,getWidth(objs.find(o=>['arrow','line','rect','ellipse','pen','magView','magSrc','dim'].includes(o.kind)))));
+  if(has('dim')){const dm=objs.find(o=>o.type==='dim');const cur=dm?dm.dimType:st.dimType;h+=sec('แบบเส้นบอกขนาด',`<div class="tiles dims">${DIM_TYPES.map(([v,en,th,ic])=>`<button class="tile ${v===cur?'on':''}" data-act="dimtype" data-v="${v}" title="${th}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">${ic}</svg>${en}</button>`).join('')}</div>`+check('outline','มีขอบขาวรอบเส้น ช่วยให้เห็นชัดบนรูป',dm?dm.outline:st.outline)+(dm?'<p class="tip">ดับเบิลคลิกตัวเลขเพื่อแก้ ลากตัวเลขไปวางที่อื่นได้ เส้นกับตัวเลขจะไปด้วยกัน</p>':''));}
   if(has('arrow')||has('line')){const a=objs.find(o=>o.type==='arrow');const heads=a?a.heads:(tool==='line'?'none':st.heads);h+=sec('รูปแบบเส้น',seg('heads',[['none','เส้นเปล่า'],['end','→ ปลายเดียว'],['both','↔ สองทาง']],heads)+check('outline','มีขอบขาวรอบเส้น ช่วยให้เห็นชัดบนรูป',a?a.outline:st.outline));}
   if(has('rect')||has('ellipse')){const a=objs.find(o=>o.kind==='rect'||o.kind==='ellipse');h+=sec('พื้นใน',seg('fill',[['none','โปร่ง'],['soft','สีจาง'],['solid','ทึบ']],a?a.fillMode||'none':st.fill));}
   if(has('badge')){const b=objs.find(o=>o.kind==='badge');h+=sec('',range('badge','ขนาดตัวเลข',24,200,b?Math.round(b._objects[0].radius*2*b.scaleX):st.badgeSize)+(objs.length?'':`<p class="tip">เลขถัดไป <b>${nextBadgeNum()}</b> · ลบเลขสุดท้ายแล้ว เลขจะนับต่อจากที่เหลือ</p>`));}
@@ -955,9 +1095,9 @@ function applySetting(k,v,final){
   switch(k){
     case 'color':st.color=v;objs.forEach(o=>setColor(o,v));if(canvas.freeDrawingBrush)canvas.freeDrawingBrush.color=v;break;
     case 'width':st.width=v;objs.forEach(o=>setWidth(o,v));if(canvas.freeDrawingBrush)canvas.freeDrawingBrush.width=v;break;
-    case 'textSize':st.textSize=v;objs.filter(o=>o.kind==='text').forEach(o=>{o.set({fontSize:v,scaleX:1,scaleY:1});applyTextStyle(o,o.txtStyle,o.baseColor);o.setCoords();});break;
+    case 'textSize':st.textSize=v;objs.filter(o=>o.kind==='text').forEach(o=>{o.set({fontSize:v,scaleX:1,scaleY:1});applyTextStyle(o,o.txtStyle,o.baseColor);o.setCoords();if(o.dimId){const dd=dimOf(o.dimId);if(dd){dd.textFs=v;syncDimText(dd);}}});break;
     case 'badge':st.badgeSize=v;objs.filter(o=>o.kind==='badge').forEach(o=>{o.scale(v/(o._objects[0].radius*2));o.setCoords();});break;
-    case 'outline':st.outline=v;objs.filter(o=>o.type==='arrow').forEach(o=>{o.outline=v;o.dirty=true;});break;
+    case 'outline':st.outline=v;objs.filter(o=>o.type==='arrow'||o.type==='dim').forEach(o=>{o.outline=v;o.dirty=true;});break;
     case 'magZoom':st.magZoom=v;magIds.forEach(id=>{const{view}=magParts(id);if(!view)return;view.magZoom=v;view.scale(v/view.magMult);view.setCoords();updateLink(id);if(final)scheduleRecap(id,true);});break;
     case 'gap':case 'pad':case 'radius':layout[k]=v;applyLayout(true);break;
     case 'bg':canvas.backgroundColor=v;break;
@@ -978,6 +1118,7 @@ function wire(){
       case 'bg':applySetting('bg',v,true);break;
       case 'tstyle':st.textStyle=v;objs.filter(o=>o.kind==='text').forEach(o=>applyTextStyle(o,v,o.baseColor));save();break;
       case 'heads':if(v!=='none')st.heads=v;objs.filter(o=>o.type==='arrow').forEach(o=>{o.heads=v;o.kind=v==='none'?'line':'arrow';o.dirty=true;});if(!objs.length&&(tool==='arrow'||tool==='line')){setTool(v==='none'?'line':'arrow');return;}save();break;
+      case 'dimtype':st.dimType=v;objs.filter(o=>o.type==='dim').forEach(o=>convertDim(o,v));if(objs.length)save();break;
       case 'fill':st.fill=v;objs.filter(o=>o.kind==='rect'||o.kind==='ellipse').forEach(o=>{o.fillMode=v;o.set('fill',fillFor(v,o.baseColor));});save();break;
       case 'magShape':st.magShape=v;new Set(objs.filter(o=>o.magId).map(o=>o.magId)).forEach(id=>setMagStyle(id,{shape:v}));save();break;
       case 'mag-refresh':new Set(objs.filter(o=>o.magId).map(o=>o.magId)).forEach(id=>recapture(id));break;
