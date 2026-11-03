@@ -151,6 +151,8 @@ button{font-family:inherit;color:inherit}
 .algn{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}
 .algn .btn{height:36px;padding:0}
 .algn svg{width:20px;height:20px}
+.bnext{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13.5px;flex-wrap:wrap}
+.bnext .btn{height:32px;font-size:13px}
 .tiles.bstyles{grid-template-columns:repeat(3,1fr)}
 .tiles.bstyles .tile{gap:5px;padding:8px 2px 6px;font-size:10.5px}
 .tiles.shapes{grid-template-columns:repeat(4,1fr)}
@@ -286,7 +288,7 @@ const TEMPLATES={
 const SIZES=[['1:1',1080,1080],['4:3',1600,1200],['3:4',1200,1600],['16:9',1920,1080],['9:16',1080,1920],['A4 นอน',1754,1240]];
 
 let W=1600,H=1200,zoom=1,autoFit=true,tool='select';
-const st={bseq:'num',bstyle:'solid',bshadow:true,connMode:'auto',shapeType:'rect',dash:'solid',font:'IBM Plex Sans Thai',bold:true,italic:false,underline:false,align:'center',cheads:'end',dimType:'linear',color:'#FF3B30',width:8,textSize:56,textStyle:'outline',fill:'none',heads:'end',outline:true,badgeSize:64,magShape:'rect',magZoom:2.5};
+const st={bseq:'num',bstyle:'solid',bshadow:true,connMode:'auto',shapeType:'rect',dash:'solid',font:'IBM Plex Sans Thai',bold:true,italic:false,underline:false,align:'center',cheads:'end',dimType:'linear',color:'#FF3B30',width:8,textSize:56,textStyle:(()=>{try{return localStorage.getItem('chijud-tstyle')||'outline';}catch(_){return'outline';}})(),fill:'none',heads:'end',outline:true,badgeSize:64,magShape:'rect',magZoom:2.5};
 const layout={tpl:null,gap:16,pad:16,radius:0};
 const G_CANCEL=()=>!!(window.__chijudG&&window.__chijudG.cancel);
 let muted=false,loading=false,cropping=null,drawing=null,pickSlot=null,cascade=0;
@@ -935,7 +937,9 @@ function makeBadge(n,x,y,c,size,opt){
   badgeLayout(g);decorate(g);return g;
 }
 function setBadgeColor(g,c){g.baseColor=c;g.dirty=true;}
-function nextBadgeNum(seq){seq=seq||st.bseq;return canvas.getObjects().filter(o=>o.kind==='badge'&&(o.bseq||'num')===seq).reduce((m,o)=>Math.max(m,o.num||0),0)+1;}
+const bNext={};
+function takeBadgeNum(seq){seq=seq||st.bseq;const n=nextBadgeNum(seq);bNext[seq]=n+1;return n;}
+function nextBadgeNum(seq){seq=seq||st.bseq;if(bNext[seq]!=null)return bNext[seq];return canvas.getObjects().filter(o=>o.kind==='badge'&&(o.bseq||'num')===seq).reduce((m,o)=>Math.max(m,o.num||0),0)+1;}
 
 function decorate(o){
   const k=o.kind;
@@ -1320,7 +1324,7 @@ canvas.on('mouse:down',o=>{
     return;
   }
   if(tool==='text'){addText(p);return;}
-  if(tool==='number'){const g=makeBadge(nextBadgeNum(),p.x,p.y,st.color,st.badgeSize);canvas.add(g);canvas.requestRenderAll();save();updatePanel();return;}
+  if(tool==='number'){const g=makeBadge(takeBadgeNum(),p.x,p.y,st.color,st.badgeSize);canvas.add(g);canvas.requestRenderAll();save();updatePanel();return;}
   let obj;
   const base={excludeFromExport:true};
   if(tool==='arrow'||tool==='line')obj=new fabric.Arrow([p.x,p.y,p.x,p.y],Object.assign({stroke:st.color,strokeWidth:st.width,heads:tool==='line'?'none':st.heads,outline:st.outline,kind:tool,baseColor:st.color,dash:st.dash},base));
@@ -1429,7 +1433,7 @@ function duplicate(){
   canvas.discardActiveObject();const out=[];let n=objs.length;const d=Math.min(W,H)*.02;
   objs.forEach(o=>o.clone(c=>{
     c.set({left:c.left+d,top:c.top+d});c.uid=null;if(c.dimId){c.dimId=null;c.dimOff=null;}if(c.slotIndex!=null){c.slotIndex=null;c.clipPath=null;}
-    if(c.kind==='badge'){c.num=nextBadgeNum(c.bseq);badgeLayout(c);}
+    if(c.kind==='badge'){c.num=takeBadgeNum(c.bseq);badgeLayout(c);}
     decorate(c);muted=true;canvas.add(c);muted=false;out.push(c);
     if(--n===0){canvas.setActiveObject(out.length>1?new fabric.ActiveSelection(out,{canvas}):out[0]);canvas.requestRenderAll();save();updatePanel();}
   },PROPS));
@@ -1458,6 +1462,7 @@ function clearBoard(){
 }
 function doClear(){
   if(cropping)cancelCrop(true);
+  Object.keys(bNext).forEach(k=>delete bNext[k]);
   const bg=canvas.backgroundColor;muted=true;canvas.clear();canvas.backgroundColor=bg;layout.tpl=null;muted=false;
   $('#banner').hidden=true;canvas.requestRenderAll();setTool('select');save();syncUI();updatePanel();
 }
@@ -1832,7 +1837,10 @@ function updatePanel(){
   if(!objs.length&&tool==='dim')h+=sec('วิธีวาด · '+DIM_TYPES.find(x=>x[0]===st.dimType)[1],dimStepsHtml(st.dimType));
   const colorable=['shape','conn','callout','dim','text','arrow','line','rect','ellipse','pen','badge','highlight','magView'];
   if([...kinds].some(k=>colorable.includes(k)))h+=sec('สี',swatches(ref?ref.baseColor||st.color:st.color));
-  if(has('text')){const t=objs.find(o=>o.kind==='text');h+=sec('ข้อความ',textTools(t)+range('textSize','ขนาดตัวอักษร',16,240,t?Math.round(t.fontSize*t.scaleY):st.textSize));h+=sec('เอฟเฟกต์',textStyles(t?t.txtStyle:st.textStyle,t?t.baseColor||st.color:st.color));}
+  if(has('text')){const t=objs.find(o=>o.kind==='text');h+=sec('ข้อความ',textTools(t)+range('textSize','ขนาดตัวอักษร',16,240,t?Math.round(t.fontSize*t.scaleY):st.textSize));{const cur=t?t.txtStyle:st.textStyle,bgv={label:'solid',chip:'soft',card:'white',tag:'white',accent:'white',marker:'marker'}[cur]||'none';
+    h+=sec('พื้นหลังและขอบ',`<div class="range"><label>พื้นหลังข้อความ</label></div>`+seg('tbg',[['none','ไม่มี'],['white','ขาว'],['soft','สีอ่อน'],['solid','สีทึบ']],bgv)
+      +(bgv==='none'?`<div class="range" style="margin-top:4px"><label>ขอบรอบตัวอักษร</label></div>`+seg('tstroke',[['off','ไม่มีขอบ'],['on','ขอบขาว']],cur==='outline'?'on':'off')+'<p class="tip">ขอบขาว (stroke) ช่วยให้อ่านออกเวลาเขียนทับรูป ถ้าพื้นเรียบใช้แบบไม่มีขอบจะดูสะอาดกว่า</p>':''));
+    h+=sec('สไตล์อื่นๆ',textStyles(cur,t?t.baseColor||st.color:st.color));}}
   if(['arrow','line','rect','ellipse','shape','pen','magView','dim','callout','conn'].some(has))h+=sec('',range('width','ความหนาเส้น',2,40,getWidth(objs.find(o=>['arrow','line','rect','ellipse','shape','pen','magView','magSrc','dim','callout','conn'].includes(o.kind)))));
   if(has('conn')){const c=objs.find(o=>o.type==='conn'),man=c?!!c.manual:st.connMode==='manual';
     h+=sec('การเดินเส้น',seg('cmode',[['auto','อัตโนมัติ หลบวัตถุ'],['manual','กำหนดเอง']],man?'manual':'auto')+(c?(man?'<p class="tip">ลาก<b>จุดสี่เหลี่ยม</b>กลางแต่ละช่วงเพื่อเลื่อนช่วงนั้น เส้นข้างเคียงจะยืดหดตาม ลาก<b>จุดกลม</b>ที่ปลายเพื่อย้ายจุดเข้าออกบนขอบกรอบ</p>':''):(man?'<ol class="dsteps"><li class="'+(connDraft?'done':'now')+'">คลิกจุดเริ่ม (คลิกบนขอบกรอบได้เลย)</li><li class="'+(connDraft?'now':'')+'">คลิกทีละจุดเพื่อหักมุม</li><li>คลิกในกรอบปลายทาง หรือดับเบิลคลิก / Enter เพื่อจบที่ว่าง</li></ol>':'<p class="tip">คลิกจุดเริ่มแล้วคลิกจุดปลาย เส้นจะหาทางหลบวัตถุเอง</p>')));
@@ -1855,7 +1863,7 @@ function updatePanel(){
     h+=sec('ลำดับ',seg('bseq',BSEQ,b?b.bseq:st.bseq)+`<div class="tiles bstyles">${BSTYLES.map(([v,l])=>`<button class="tile ${v===(b?b.bstyle:st.bstyle)?'on':''}" data-act="bstyle" data-v="${v}" title="${l}">${prev(v)}<span>${l}</span></button>`).join('')}</div>`+check('bshadow','มีเงา',b?b.bshadow:st.bshadow)
       +range('badge','ขนาด',24,200,b?Math.round(b.r*2*Math.abs(b.scaleX)):st.badgeSize)
       +(bs.length===1?`<div class="range"><label for="bnumIn">ลำดับที่ (เปลี่ยนเลขของอันนี้)</label><input id="bnumIn" type="number" min="1" max="999" data-input="bnum" value="${b.num}" style="height:32px;border:1px solid var(--line);border-radius:7px;background:var(--raise);color:var(--fg);padding:0 8px;font:500 14px var(--f-ui);grid-column:1/-1"></div>`:'')
-      +(objs.length?'':`<p class="tip">อันถัดไป <b>${seqLabel(nextBadgeNum(st.bseq),st.bseq)}</b> · แต่ละชุด (1, a, A) นับแยกกัน</p>`));}
+      +(objs.length?'':`<div class="bnext"><span>อันถัดไป <b>${seqLabel(nextBadgeNum(st.bseq),st.bseq)}</b></span><button class="btn outline" data-act="brestart">เริ่มนับใหม่ที่ ${seqLabel(1,st.bseq)}</button></div><div class="range"><label for="bnextIn">หรือกำหนดอันถัดไปเป็นเลข</label><input id="bnextIn" type="number" min="1" max="999" data-input="bnext" value="${nextBadgeNum(st.bseq)}" style="height:32px;border:1px solid var(--line);border-radius:7px;background:var(--raise);color:var(--fg);padding:0 8px;font:500 14px var(--f-ui);grid-column:1/-1"></div><p class="tip">ลำดับที่วางไว้แล้วยังอยู่เหมือนเดิม ใช้เลขซ้ำได้ · แต่ละชุด (1, a, A) นับแยกกัน</p>`));}
   if(has('magView')){const v=objs.length?magParts(objs.find(o=>o.magId).magId).view:null;h+=sec('ภาพขยาย',seg('magShape',[['rect','กรอบเหลี่ยม'],['circle','กรอบวงกลม']],v?v.magShape:st.magShape)+range('magZoom','ระดับซูม',1.5,5,v?v.magZoom:st.magZoom,.1)+(v?'<button class="btn outline" data-act="mag-refresh">อัปเดตภาพขยายใหม่</button><p class="tip">ลากกรอบต้นทางไปตรงอื่น ภาพขยายจะเปลี่ยนตามเอง</p>':''));}
   if(one&&one.kind==='image'){
     h+=one.slotIndex!=null?sec('รูปในช่อง',`<div class="btn-col"><button class="btn outline" data-act="slot-refit">จัดรูปให้เต็มช่องใหม่</button><button class="btn outline" data-act="slot-free">เอาออกจากช่อง</button></div><p class="tip">ลากหรือย่อขยายรูป เพื่อเลือกส่วนที่จะโชว์ในช่อง</p>`)
@@ -1874,6 +1882,7 @@ function applySetting(k,v,final){
     case 'width':st.width=v;objs.forEach(o=>setWidth(o,v));if(canvas.freeDrawingBrush)canvas.freeDrawingBrush.width=v;break;
     case 'textSize':st.textSize=v;objs.filter(o=>o.kind==='text').forEach(o=>{o.set({fontSize:v,scaleX:1,scaleY:1});applyTextStyle(o,o.txtStyle,o.baseColor);o.setCoords();if(o.dimId){const dd=dimOf(o.dimId);if(dd){dd.textFs=v;syncDimText(dd);}}});break;
     case 'badge':st.badgeSize=v;objs.filter(o=>o.kind==='badge').forEach(o=>{o.r=v/2;o.set({scaleX:1,scaleY:1});badgeLayout(o);});break;
+    case 'bnext':{if(final)return;const n=Math.max(1,Math.min(999,parseInt(v)||1));bNext[st.bseq]=n;const b=document.querySelector('.bnext b');if(b)b.textContent=seqLabel(n,st.bseq);return;}
     case 'bshadow':st.bshadow=v;objs.filter(o=>o.kind==='badge').forEach(o=>{o.bshadow=v;o.dirty=true;});break;
     case 'bnum':{const n=Math.max(1,Math.min(999,parseInt(v)||1));objs.filter(o=>o.kind==='badge').forEach(o=>{o.num=n;badgeLayout(o);});break;}
     case 'outline':st.outline=v;objs.filter(o=>o.type==='arrow'||o.type==='dim'||o.type==='conn').forEach(o=>{o.outline=v;o.dirty=true;});break;
@@ -1897,12 +1906,14 @@ function wire(){
     switch(a){
       case 'color':applySetting('color',v,true);break;
       case 'bg':applySetting('bg',v,true);break;
-      case 'tstyle':st.textStyle=v;objs.filter(o=>o.kind==='text').forEach(o=>applyTextStyle(o,v,o.baseColor));save();break;
+      case 'tbg':case 'tstroke':{const map=a==='tbg'?{none:'plain',white:'card',soft:'chip',solid:'label'}:{off:'plain',on:'outline'};const nv=map[v];st.textStyle=nv;try{localStorage.setItem('chijud-tstyle',nv);}catch(_){}objs.filter(o=>o.kind==='text').forEach(o=>applyTextStyle(o,nv,o.baseColor));if(objs.length)save();break;}
+      case 'tstyle':try{localStorage.setItem('chijud-tstyle',v);}catch(_){}st.textStyle=v;objs.filter(o=>o.kind==='text').forEach(o=>applyTextStyle(o,v,o.baseColor));save();break;
       case 'heads':if(v!=='none')st.heads=v;objs.filter(o=>o.type==='arrow').forEach(o=>{o.heads=v;o.kind=v==='none'?'line':'arrow';o.dirty=true;});if(!objs.length&&(tool==='arrow'||tool==='line')){setTool(v==='none'?'line':'arrow');return;}save();break;
       case 'lock-one':objs.filter(isLockable).forEach(o=>{o.locked=true;decorate(o);});canvas.discardActiveObject();save();syncUI();toast('ล็อกแล้ว ปลดล็อกได้จากปุ่มด้านบน');break;
       case 'cmode':st.connMode=v;if(connDraft)cancelConnDraft();objs.filter(o=>o.type==='conn').forEach(o=>{const m=v==='manual';if(m&&!o.manual){['ca','cb'].forEach(k=>{const e=o[k],ob=e.id&&objOfUid(e.id);if(ob){const r=ob.getBoundingRect(true,true);e.u=r.width?(e.x-r.left)/r.width:.5;e.v=r.height?(e.y-r.top)/r.height:.5;}});}o.manual=m;connControls(o);routeConn(o);});if(objs.length)save();break;
       case 'cheads':st.cheads=v;objs.filter(o=>o.type==='conn').forEach(o=>{o.heads=v;routeConn(o);});if(objs.length)save();break;
       case 'align':alignObjs(v);updatePanel();return;
+      case 'brestart':bNext[st.bseq]=1;toast('เริ่มนับใหม่ อันถัดไปคือ '+seqLabel(1,st.bseq));break;
       case 'bseq':st.bseq=v;objs.filter(o=>o.kind==='badge').forEach(o=>{o.bseq=v;badgeLayout(o);});if(objs.length)save();break;
       case 'bstyle':st.bstyle=v;objs.filter(o=>o.kind==='badge').forEach(o=>{o.bstyle=v;badgeLayout(o);});if(objs.length)save();break;
       case 'dimtype':if(dimDraft)cancelDimDraft();st.dimType=v;objs.filter(o=>o.kind==='dim').forEach(o=>convertDim(o,v));if(objs.length)save();break;
